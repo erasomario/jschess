@@ -5,12 +5,19 @@ const apiKey = require("./model/apiKey")
 const v1 = require("./v1.js")
 const v2 = require("./v2.js")
 
-mongoose.connect("mongodb://localhost:27017/test", {
+mongoose.connect("unsafe:mongodb://root:7Inafu0HuiZfszff@jschess-ezqfnngps3pgnb3n-svc.qovery.io:27017/jschess", {
     useNewUrlParser: true,
     useFindAndModify: true,
     useUnifiedTopology: true,
     useCreateIndex: true
-})
+});
+
+/*mongoose.connect("mongodb://localhost:27017/jschess", {
+    useNewUrlParser: true,
+    useFindAndModify: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true
+})*/
 
 var app = express();
 app.use(express.static(path.join(__dirname, 'public'))); 
