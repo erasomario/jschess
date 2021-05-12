@@ -5,7 +5,10 @@ const apiKey = require("./model/apiKey")
 const v1 = require("./v1.js")
 const v2 = require("./v2.js")
 
-mongoose.connect("unsafe:mongodb://root:7Inafu0HuiZfszff@jschess-ezqfnngps3pgnb3n-svc.qovery.io:27017/jschess", {
+const dbUsr = process.env.QOVERY_DATABASE_JSCHESS_USERNAME;
+const dbPass = process.env.QOVERY_DATABASE_JSCHESS_PASSWORD;
+
+mongoose.connect(`unsafe:mongodb://${dbUsr}:${dbPass}@jschess-ezqfnngps3pgnb3n-svc.qovery.io:27017/jschess`, {
     useNewUrlParser: true,
     useFindAndModify: true,
     useUnifiedTopology: true,
@@ -26,11 +29,20 @@ app.use(express.json())
 app.use("/v1", v1)
 app.use("/v2", v2)
 
-const PORT = process.env.PORT || 3000;
-
-function onListening() {
-    debug('Listening on ' + PORT);
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+    if (isNaN(port)) {
+        return val;
+    }
+    if (port >= 0) {
+        return port;
+    }
+    return false;
 }
 
-app.listen(PORT, onListening);
+const PORT = normalizePort(process.env.PORT || 3000);
+console.log(`trying to listen on ${PORT}`);
+app.listen(PORT, function () {
+    console.log(`Listening on ${PORT}`);
+})
 
