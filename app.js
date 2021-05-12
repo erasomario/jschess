@@ -29,11 +29,7 @@ app.use("/v2", v2)
 const PORT = process.env.PORT || 3000;
 
 function onListening() {
-    var addr = server.address();
-    var bind = typeof addr === 'string'
-        ? 'pipe ' + addr
-        : 'port ' + addr.port;
-    debug('Listening on ' + bind);
+    debug('Listening on ' + PORT);
 }
 
 app.listen(PORT, onListening);
