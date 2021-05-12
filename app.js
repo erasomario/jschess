@@ -20,7 +20,7 @@ mongoose.connect("unsafe:mongodb://root:7Inafu0HuiZfszff@jschess-ezqfnngps3pgnb3
 })*/
 
 var app = express();
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(apiKey.authMiddleWar);
 app.use(express.json())
 app.use("/v1", v1)
@@ -28,6 +28,13 @@ app.use("/v2", v2)
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, function () {
-    console.log(`App started on port ${PORT}`);
-});
+function onListening() {
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    debug('Listening on ' + bind);
+}
+
+app.listen(PORT, onListening);
+
