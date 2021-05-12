@@ -26,7 +26,7 @@ app.use(express.json())
 app.use("/v1", v1)
 app.use("/v2", v2)
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, function () {
     console.log(`App started on port ${PORT}`);
