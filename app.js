@@ -12,12 +12,12 @@ const mongooseParams = {
     useCreateIndex: true
 };
 
-if (process.env.QOVERY_DATABASE_JSCHESS_USERNAME === undefined) {
+if (process.env.QOVERY_DATABASE_JSCHESS_USERNAME === undefined) {    
+    mongoose.connect("mongodb://localhost:27017/jschess", mongooseParams);
+} else {
     const dbUsr = process.env.QOVERY_DATABASE_JSCHESS_USERNAME;
     const dbPass = process.env.QOVERY_DATABASE_JSCHESS_PASSWORD;
     mongoose.connect(`unsafe:mongodb://${dbUsr}:${dbPass}@jschess-ezqfnngps3pgnb3n-svc.qovery.io:27017/jschess`, mongooseParams);
-} else {
-    mongoose.connect("mongodb://localhost:27017/jschess", mongooseParams);
 }
 
 var app = express();
