@@ -1,6 +1,6 @@
 const express = require("express")
 const User = require("./model/user")
-const apiKey = require("./model/apiKey")
+const token = require("./model/token")
 
 var rt = express.Router()
 
@@ -13,7 +13,7 @@ rt.post("/secret", function (req, res) {
 })
 
 rt.post("/public/api_keys", function (req, res) {
-    apiKey.generate(req.body.username, req.body.password, (error, key) => {
+    token.generator(req.body.username, req.body.password, (error, key) => {
         if (error) {
             res.status(500).json({ error: "Error inesperado" })
         } else if (key) {

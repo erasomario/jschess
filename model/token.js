@@ -4,6 +4,9 @@ const User = require("./user")
 var aesKey = aes.utils.utf8.toBytes("Yp3s6v9y$B&E)H@McQfThWmZq4t7w!z%")
 
 var decode = (key, callBack) => {
+    if (key.substring(0, 7).toLowerCase().startsWith('bearer ')) {
+        key = key.substring(7);
+    }
     var aesCtr = new aes.ModeOfOperation.ctr(aesKey, new aes.Counter(5))
     var sess = JSON.parse(aes.utils.utf8.fromBytes(aesCtr.decrypt(aes.utils.hex.toBytes(key))));
     User.findById(sess.id, (err, user) => {
@@ -17,26 +20,26 @@ var encode = (user) => {
     return aes.utils.hex.fromBytes(aesCtr.encrypt(textBytes));
 }
 
-var middleWar = (req, res, next) => {
+var middleware = (req, res, next) => {
     if (new RegExp("^/v\\d+/public/").test(req.path)) {
-        next()
+        next();
     } else {
-        if (!req.headers['x-api-key']) {
+        if (!req.headers['authorization']) {
             res.status(401).end();
         } else {
-            decode(req.headers['x-api-key'], (error, usr) => {
+            decode(req.headers['authorization'], (error, usr) => {
                 if (error || !usr) {
                     res.status(500).end();
                     return;
                 }
-                req.user = usr
-                next()
+                req.user = usr;
+                next();
             })
         }
     }
 }
 
-var generate = (username, password, callback) => {
+var generateToken = (username, password, callback) => {
     User.findOne({ username: username }, (err, user) => {
         if (err) {
             callback(err, null)
@@ -56,4 +59,4 @@ var generate = (username, password, callback) => {
     })
 }
 
-module.exports = { authMiddleWar: middleWar, generate: generate }
+module.exports = { middleware, generator: generateToken }
