@@ -1,9 +1,9 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
-const token = require("./model/token");
-const v1 = require("./v1.js");
-const v2 = require("./v2.js");
+const v1 = require("./api/v1.js");
+const v2 = require("./api/v2.js");
+const ApiKey = require("./model/apiKey");
 
 const mongooseParams = {
     useNewUrlParser: true,
@@ -12,7 +12,7 @@ const mongooseParams = {
     useCreateIndex: true
 };
 
-if (process.env.QOVERY_DATABASE_JSCHESS_USERNAME === undefined) {  
+if (process.env.QOVERY_DATABASE_JSCHESS_USERNAME === undefined) {
     console.log('local');
     mongoose.connect("mongodb://localhost:27017/jschess", mongooseParams);
 } else {
@@ -22,9 +22,15 @@ if (process.env.QOVERY_DATABASE_JSCHESS_USERNAME === undefined) {
     mongoose.connect(`unsafe:mongodb://${dbUsr}:${dbPass}@jschess-ezqfnngps3pgnb3n-svc.qovery.io:27017/jschess`, mongooseParams);
 }
 
+const db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function () {
+    
+});
+
 var app = express();
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(token.middleware);
+app.use(ApiKey.middleware);
 app.use(express.json());
 app.use("/v1", v1);
 app.use("/v2", v2);

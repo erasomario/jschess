@@ -2,13 +2,13 @@
 
 const  bcrypt = require("bcrypt-nodejs");
 const  mongoose = require("mongoose");
+const {Schema} = mongoose;
 const  SALT_FACTOR = 10;
-const  userSchema = mongoose.Schema({
+const  userSchema = Schema({
     email: { type: String, required: true, unique: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-    
+    createdAt: { type: Date, default: Date.now }    
 });
 
 const noop = function () { };
@@ -35,4 +35,5 @@ userSchema.methods.checkPassword = function (guess, done) {
 userSchema.methods.name = function () {
     return this.displayName || this.username;
 };
+
 module.exports = mongoose.model("User", userSchema);
