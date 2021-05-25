@@ -7,7 +7,16 @@ const SALT_FACTOR = 10;
 const userSchema = Schema({
     email: { type: String, required: true, unique: true },
     username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: {
+        type: String,
+        required: true,
+        validate: {
+            validator: (val) => {
+                return val.length >= 6;
+            },
+            message: "La contraseña debe tener al menos 6 caracteres"
+        }
+    },
     createdAt: { type: Date, default: Date.now },
     recoveryKey: {
         key: String,

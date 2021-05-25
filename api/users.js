@@ -70,8 +70,16 @@ router.put("/:id/password", (req, res) => {
     if (req.user.id === req.params.id) {
         if (req.body.password) {
             req.user.password = req.body.password;
-            req.user.save();
-            res.status(200).end();
+            req.user.save().then(() => {
+                res.status(200).end();
+            }).catch((error) => {
+                let msg = '';
+                for (const err in error.errors) {
+                    msg += (' ' + error.errors[err].message);
+                }
+                res.status(400).json({ error: msg });    
+            });
+
         } else {
             res.status(400).json({ error: "Debe escribir una contraseña" });
         }
