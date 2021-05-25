@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const path = require("path");
 const v1 = require("./api/v1.js");
 const v2 = require("./api/v2.js");
-const ApiKey = require("./model/apiKey");
+const ApiKey = require("./model/apiKeys");
 
 const mongooseParams = {
     useNewUrlParser: true,
@@ -32,8 +32,8 @@ var app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(ApiKey.middleware);
 app.use(express.json());
-app.use("/v1", v1);
-app.use("/v2", v2);
+app.use("/api/v1", v1);
+app.use("/api/v2", v2);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, function () {

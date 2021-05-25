@@ -1,7 +1,12 @@
-const aes = require('aes-js')
-const User = require("./user")
+const aes = require('aes-js');
+const User = require("./users");
+const aesKey = aes.utils.utf8.toBytes("Yp3s6v9y$B&E)H@McQfThWmZq4t7w!z%");
 
-var aesKey = aes.utils.utf8.toBytes("Yp3s6v9y$B&E)H@McQfThWmZq4t7w!z%")
+const whiteList = [
+    { path: "^\/api\/v1\/users$", method: "POST" },
+    { path: "^\/api\/v1\/api_keys$", method: "POST" },
+    { path: "^\/api\/v1\/users\/.+\/recovered_password$", method: "PUT" },
+];
 
 var decode = (key, callBack) => {
     if (key.substring(0, 7).toLowerCase().startsWith('bearer ')) {
@@ -21,7 +26,11 @@ var encode = (user) => {
 }
 
 var middleware = (req, res, next) => {
-    if (/.*\/public\/.*/.test(req.path) || /.*\/public$/.test(req.path)) {
+    const path = req.path = req.path.replace(/\/$/, "");
+    const allowed = whiteList.filter(white => {
+        return new RegExp(white.path).test(path) && white.method == req.method;
+    }).length > 0;
+    if (allowed) {
         next();
     } else {
         if (!req.headers['authorization']) {
