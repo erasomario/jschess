@@ -77,7 +77,7 @@ router.put("/:id/password", (req, res) => {
                 for (const err in error.errors) {
                     msg += (' ' + error.errors[err].message);
                 }
-                res.status(400).json({ error: msg });    
+                res.status(400).json({ error: msg });
             });
 
         } else {
@@ -106,8 +106,14 @@ router.put('/:id/recovered_password', (req, res) => {
                         const m = ((new Date() - user.recoveryKey.createdAt) / 1000 / 60);
                         if (m <= 30) {
                             user.password = req.body.password;
-                            user.save();
-                            res.status(200).end();
+                            user.save().then(() => res.status(200).end()).catch((error) => {
+                                let msg = '';
+                                for (const err in error.errors) {
+                                    msg += (' ' + error.errors[err].message);
+                                }
+                                res.status(400).json({ error: msg });
+                            })
+
                         } else {
                             res.status(400).json({ error: "El código expiró, debe generar uno nuevo" });
                         }

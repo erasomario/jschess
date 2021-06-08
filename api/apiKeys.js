@@ -1,6 +1,7 @@
 const express = require('express');
 const ApiKey = require('../model/apiKeys');
 const router = express.Router();
+const User = require('../model/users')
 
 router.post("/", function (req, res) {
     if (Object.keys(req.body).length === 0) {
@@ -14,7 +15,7 @@ router.post("/", function (req, res) {
             if (error) {
                 res.status(500).json({ error: "Error inesperado" });
             } else if (key) {
-                res.status(200).json({ api_key: key });
+                res.status(200).json(key);
             } else {
                 res.status(400).json({ error: "Nombre de usuario o contraseña incorrectos" });
             }

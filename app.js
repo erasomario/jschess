@@ -4,6 +4,7 @@ const path = require("path");
 const v1 = require("./api/v1.js");
 const v2 = require("./api/v2.js");
 const ApiKey = require("./model/apiKeys");
+const cors = require('cors')
 
 const mongooseParams = {
     useNewUrlParser: true,
@@ -25,17 +26,18 @@ if (process.env.QOVERY_DATABASE_JSCHESS_USERNAME === undefined) {
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {
-    
+
 });
 
 var app = express();
+app.use(cors())
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(ApiKey.middleware);
 app.use(express.json());
 app.use("/api/v1", v1);
 app.use("/api/v2", v2);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, function () {
     console.log(`Server Listening on ${PORT}`);
 });

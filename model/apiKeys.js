@@ -2,8 +2,9 @@ const aes = require('aes-js');
 const User = require("./users");
 const aesKey = aes.utils.utf8.toBytes("Yp3s6v9y$B&E)H@McQfThWmZq4t7w!z%");
 
-const whiteList = [
-    { path: "^\/api\/v1\/users$", method: "POST" },
+const whiteList = [    
+    { path: "^\/api\/v1\/recovery_keys$", method: "POST" },
+    { path: "^\/api\/v1\/users$", method: "POST" },    
     { path: "^\/api\/v1\/api_keys$", method: "POST" },
     { path: "^\/api\/v1\/users\/.+\/recovered_password$", method: "PUT" },
 ];
@@ -57,7 +58,7 @@ generateApiKey = (login, password, callback) => {
                 if (err) {
                     callback(err, null);
                 } else if (isMatch) {
-                    callback(null, encode(user));
+                    callback(null, { api_key: encode(user), ...User.dto(user) });
                 } else {
                     callback(null, null);
                 }
