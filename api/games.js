@@ -1,43 +1,43 @@
-const express = require("express");
-const User = require("../model/users");
+const express = require("express")
+const Game = require("../model/Games")
+const Piece = require('../model/Piece')
 
 var router = express.Router();
 
 router.post("/", function (req, res) {
-    if (!req.body.username) {
-        res.status(400).json({ error: "Debe escribir un nombre de usuario" });
-    } else if (!/^[A-Za-z\d\-_]+$/.test(req.body.username)) {
-        res.status(400).json({ error: "El nombre de usuario debe componerse únicamente de letras, números y guiones." });
-    } else if (!req.body.email) {
-        res.status(400).json({ error: "Debe escribir un email" });
-    } else if (!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(req.body.email)) {
-        res.status(400).json({ error: "El mail no es válido." });
-    } else if (!req.body.password) {
-        res.status(400).json({ error: "Debe escribir un password" });
-    } else if (req.body.password.trim().length < 6) {
-        res.status(400).json({ error: "El password debe tener al menos 6 letras" });
+    const game = new Game()
+
+    if (Math.random() <= 0.5) {
+        game.whiteId = req.body.userId;
+        game.blackId = req.user.id;
+        game.startedBy = 'black';
     } else {
-        User.findOne({ username: req.body.username }, (err, user) => {
-            if (err) {
-                res.status(500).json({ error: "Error inesperado" });
-            } else if (user) {
-                res.status(400).json({ error: "Ya éxiste un usuario con el mismo nombre" });
-            } else {
-                var usr = new User({
-                    email: req.body.email,
-                    username: req.body.username,
-                    password: req.body.password,
-                });
-                usr.save((err, user) => {
-                    if (err) {
-                        res.status(500).json({ error: "Error inesperado" });
-                    } else {
-                        res.status(200).json(user);
-                    }
-                })
-            }
-        });
+        game.whiteId = req.user.id;
+        game.blackId = req.body.userId;
+        game.startedBy = 'white';
     }
+
+    const ti = Piece.toInt
+
+    game.board = {
+        whiteCaptures: [],
+        blackCaptures: [],
+        a: { 1: ti('wr'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('br') },
+        b: { 1: ti('wn'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bn') },
+        c: { 1: ti('wb'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bb') },
+        d: { 1: ti('wq'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bq') },
+        e: { 1: ti('wk'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bk') },
+        f: { 1: ti('wb'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bb') },
+        g: { 1: ti('wn'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bn') },
+        h: { 1: ti('wr'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('br') }
+    }
+    game.save((error, game) => {
+        if (error) {
+            res.status(500).end()
+        } else {
+            res.status(200).json(game)
+        }
+    })
 });
 
 router.get("/", (req, res) => {
