@@ -1,36 +1,33 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const colSchema = Schema({
-    1: { type: Number },
-    2: { type: Number },
-    3: { type: Number },
-    4: { type: Number },
-    5: { type: Number },
-    6: { type: Number },
-    7: { type: Number },
-    8: { type: Number }
-})
-
 const gameSchema = Schema({
-    whiteId: { type: String, required: true },
-    blackId: { type: String, required: true },
-    startedBy: { type: String, enum: ['white', 'black'], required: true },
+    whiteId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    blackId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    createdBy: { type: String, enum: ['white', 'black'], required: true },
     createdAt: { type: Date, default: Date.now, required: true },
     current: { type: String, enum: ['white', 'black'], default: 'white', required: true },
-    state: { type: String, enum: ['open', 'closed'], default: 'open', required: true },
-    board: {
-        whiteCaptures: [Number],
-        blackCaptures: [Number],
-        a: { type: colSchema },
-        b: { type: colSchema },
-        c: { type: colSchema },
-        d: { type: colSchema },
-        e: { type: colSchema },
-        f: { type: colSchema },
-        g: { type: colSchema },
-        h: { type: colSchema }
+    status: { type: String, enum: ['open', 'closed'], default: 'open', required: true },
+    turn: { type: Number, default: 0 },
+    pieces: {
+        wr1: { type: Map, of: String }, wn1: { type: Map, of: String }, wb1: { type: Map, of: String }, wk1: { type: Map, of: String }, wq1: { type: Map, of: String }, wb2: { type: Map, of: String }, wn2: { type: Map, of: String }, wr2: { type: Map, of: String },
+        wp1: { type: Map, of: String }, wp2: { type: Map, of: String }, wp3: { type: Map, of: String }, wp4: { type: Map, of: String }, wp5: { type: Map, of: String }, wp6: { type: Map, of: String }, wp7: { type: Map, of: String }, wp8: { type: Map, of: String },
+        br1: { type: Map, of: String }, bn1: { type: Map, of: String }, bb1: { type: Map, of: String }, bk1: { type: Map, of: String }, bq1: { type: Map, of: String }, bb2: { type: Map, of: String }, bn2: { type: Map, of: String }, br2: { type: Map, of: String },
+        bp1: { type: Map, of: String }, bp2: { type: Map, of: String }, bp3: { type: Map, of: String }, bp4: { type: Map, of: String }, bp5: { type: Map, of: String }, bp6: { type: Map, of: String }, bp7: { type: Map, of: String }, bp8: { type: Map, of: String }
     }
 });
 
-module.exports = mongoose.model("Game", gameSchema);
+gameSchema.statics.dto = function (dao) {
+    return {
+        id: dao.id,
+        whitePlayerName: dao.whiteId.username,
+        blackPlayerName: dao.blackId.username,
+        whitePlayerId: dao.whiteId.id,
+        blackPlayerId: dao.blackId.id,
+        pieces: dao.pieces,
+        turn: dao.turn,
+        current: dao.current,
+    };
+};
+
+module.exports = mongoose.model("Game", gameSchema)

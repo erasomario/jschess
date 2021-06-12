@@ -6,33 +6,26 @@ var router = express.Router();
 
 router.post("/", function (req, res) {
     const game = new Game()
-
-    if (Math.random() <= 0.5) {
+    const rand = Math.random()
+    if (rand <= 0.5) {
         game.whiteId = req.body.userId;
         game.blackId = req.user.id;
-        game.startedBy = 'black';
+        game.createdBy = 'black';
     } else {
         game.whiteId = req.user.id;
         game.blackId = req.body.userId;
-        game.startedBy = 'white';
+        game.createdBy = 'white';
     }
 
-    const ti = Piece.toInt
-
-    game.board = {
-        whiteCaptures: [],
-        blackCaptures: [],
-        a: { 1: ti('wr'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('br') },
-        b: { 1: ti('wn'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bn') },
-        c: { 1: ti('wb'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bb') },
-        d: { 1: ti('wq'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bq') },
-        e: { 1: ti('wk'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bk') },
-        f: { 1: ti('wb'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bb') },
-        g: { 1: ti('wn'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('bn') },
-        h: { 1: ti('wr'), 2: ti('wp'), 3: null, 4: null, 5: null, 6: null, 7: ti('bp'), 8: ti('br') }
+    game.pieces = {
+        wr1: { 0: '11' }, wn1: { 0: '21' }, wb1: { 0: '31' }, wq1: { 0: '41' }, wk1: { 0: '51' }, wb2: { 0: '61' }, wn2: { 0: '71' }, wr2: { 0: '81' },
+        wp1: { 0: '12' }, wp2: { 0: '22' }, wp3: { 0: '32' }, wp4: { 0: '42' }, wp5: { 0: '52' }, wp6: { 0: '62' }, wp7: { 0: '72' }, wp8: { 0: '82' },
+        bp1: { 0: '17' }, bp2: { 0: '27' }, bp3: { 0: '37' }, bp4: { 0: '47' }, bp5: { 0: '57' }, bp6: { 0: '67' }, bp7: { 0: '77' }, bp8: { 0: '87' },
+        br1: { 0: '18' }, bn1: { 0: '28' }, bb1: { 0: '38' }, bq1: { 0: '48' }, bk1: { 0: '58' }, bb2: { 0: '68' }, bn2: { 0: '78' }, br2: { 0: '88' }
     }
     game.save((error, game) => {
         if (error) {
+            console.log(error);
             res.status(500).end()
         } else {
             res.status(200).json(game)
@@ -40,92 +33,42 @@ router.post("/", function (req, res) {
     })
 });
 
-router.get("/", (req, res) => {
-    if (req.query.like.trim().length < 1) {
-        res.status(400).json({ error: "Debe escribir almenos 3 letras" });
-    } else {
-        User.find({ username: new RegExp(req.query.like, "i") }, (error, users) => {
-            if (error) {
-                res.status(500).end();
-            } else {
-                res.json(users.map(User.dto));
-            }
-        });
-    }
-});
-
 router.get("/:id", (req, res) => {
-    User.findById(req.params.id, (error, user) => {
-        if (error) {
-            res.status(500).end();
-        } else if (!user) {
-            res.status(400).json({ error: "No se encontró el usuario" });
-        } else {
-            res.json(User.dto(user));
-        }
-    });
-});
-
-router.put("/:id/password", (req, res) => {
-    if (req.user.id === req.params.id) {
-        if (req.body.password) {
-            req.user.password = req.body.password;
-            req.user.save().then(() => {
-                res.status(200).end();
-            }).catch((error) => {
-                let msg = '';
-                for (const err in error.errors) {
-                    msg += (' ' + error.errors[err].message);
-                }
-                res.status(400).json({ error: msg });
-            });
-
-        } else {
-            res.status(400).json({ error: "Debe escribir una contraseña" });
-        }
-    } else {
-        res.status(403).end();
-    }
-});
-
-
-router.put('/:id/recovered_password', (req, res) => {
-    if (!req.body.recoveryKey) {
-        res.status(400).json({ error: "Debe escribir un código" });
-    } if (!req.body.password) {
-        res.status(400).json({ error: "Debe escribir una nueva contraseña" });
-    } else {
-        User.findById(req.params.id, (error, user) => {
+    Game.findById(req.params.id)
+        .populate('whiteId')
+        .populate('blackId')
+        .exec((error, data) => {
             if (error) {
-                res.status(500).end();
-            } else if (!user) {
-                res.status(400).json({ error: "No se encontró el usuario" });
-            } else {
-                if (user.recoveryKey) {
-                    if (user.recoveryKey.key === req.body.recoveryKey) {
-                        const m = ((new Date() - user.recoveryKey.createdAt) / 1000 / 60);
-                        if (m <= 30) {
-                            user.password = req.body.password;
-                            user.save().then(() => res.status(200).end()).catch((error) => {
-                                let msg = '';
-                                for (const err in error.errors) {
-                                    msg += (' ' + error.errors[err].message);
-                                }
-                                res.status(400).json({ error: msg });
-                            })
-
-                        } else {
-                            res.status(400).json({ error: "El código expiró, debe generar uno nuevo" });
-                        }
-                    } else {
-                        res.status(400).json({ error: "El código no coincide" });
-                    }
-                } else {
-                    res.status(400).json({ error: "El código no existe" });
-                }
+                res.status(500).json(error)
+            } else if (data) {
+                res.status(200).json(Game.dto(data))
             }
         });
-    }
+});
+
+router.post("/:id/moves", (req, res) => {
+    Game.findById(req.params.id)
+        .populate('whiteId')
+        .populate('blackId')
+        .exec((error, game) => {
+            if (error) {
+                res.status(500).end();
+            } else if (!game) {
+                res.status(400).json({ error: "No se encontró el juego" });
+            } else {
+                //{piece: "wp4", src: "42", dest: "44"}
+                game.turn++
+                console.log(req.body.piece);
+                game.pieces[req.body.piece].set(`${game.turn}`, req.body.dest)
+                game.save((error, game) => {
+                    if (error) {
+                        res.status(500).end();
+                    } else {
+                        res.status(200).json(Game.dto(game))
+                    }
+                })
+            }
+        });
 });
 
 module.exports = router;

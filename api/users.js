@@ -1,5 +1,6 @@
 const express = require("express");
 const User = require("../model/users");
+const Game = require("../model/Games");
 
 var router = express.Router();
 
@@ -127,5 +128,37 @@ router.put('/:id/recovered_password', (req, res) => {
         });
     }
 });
+
+
+router.get("/:id/games/:status", (req, res) => {
+    if (req.params.id !== req.user.id) {
+        res.status(500).end();
+    }
+    Game.find({ $or: [{ whiteId: req.user.id }, { blackId: req.user.id }], status: req.params.status })
+        .sort({ createdAt: 'desc' })
+        .populate('whiteId')
+        .populate('blackId')
+        .exec((error, data) => {
+            if (error) {
+                res.status(500).json(error)
+            } else {
+                const m = data.map(g => {
+                    let playerName
+                    let turn
+                    if (g.whiteId.id === req.user.id) {
+                        playerName = g.blackId.username
+                        turn = g.current === 'white' ? 'Su turno' : `Turno de ${g.blackId.username}`
+                    } else {
+                        playerName = g.whiteId.username
+                        turn = g.current === 'black' ? 'Su turno' : `Turno de ${g.whiteId.username}`
+                    }
+                    return { id: g.id, playerName, turn }
+                })
+                console.log(m);
+                res.status(200).json(m)
+            }
+        });
+});
+
 
 module.exports = router;

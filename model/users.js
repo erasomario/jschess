@@ -51,7 +51,7 @@ userSchema.methods.name = function () {
 };
 
 userSchema.statics.dto = function (dao) {
-    return { id: dao._id, email: dao.email, username: dao.username, createdAt: dao.createdAt };
+    return { id: dao.id, email: dao.email, username: dao.username, createdAt: dao.createdAt };
 };
 
 
