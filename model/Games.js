@@ -4,9 +4,9 @@ const { Schema } = mongoose;
 const gameSchema = Schema({
     whiteId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
     blackId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
-    createdBy: { type: String, enum: ['white', 'black'], required: true },
+    createdBy: { type: String, enum: ['w', 'b'], required: true },
     createdAt: { type: Date, default: Date.now, required: true },
-    current: { type: String, enum: ['white', 'black'], default: 'white', required: true },
+    current: { type: String, enum: ['w', 'b'], default: 'w', required: true },
     status: { type: String, enum: ['open', 'closed'], default: 'open', required: true },
     turn: { type: Number, default: 0 },
     pieces: {

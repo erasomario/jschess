@@ -36,6 +36,9 @@ app.use(ApiKey.middleware);
 app.use(express.json());
 app.use("/api/v1", v1);
 app.use("/api/v2", v2);
+app.use(function(err, req, res, next) {
+    res.status(500).end()
+  });
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, function () {

@@ -147,10 +147,10 @@ router.get("/:id/games/:status", (req, res) => {
                     let turn
                     if (g.whiteId.id === req.user.id) {
                         playerName = g.blackId.username
-                        turn = g.current === 'white' ? 'Su turno' : `Turno de ${g.blackId.username}`
+                        turn = g.current === 'w' ? 'Su turno' : `Turno de ${g.blackId.username}`
                     } else {
                         playerName = g.whiteId.username
-                        turn = g.current === 'black' ? 'Su turno' : `Turno de ${g.whiteId.username}`
+                        turn = g.current === 'b' ? 'Su turno' : `Turno de ${g.whiteId.username}`
                     }
                     return { id: g.id, playerName, turn }
                 })
