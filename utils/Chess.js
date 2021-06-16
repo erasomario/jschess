@@ -73,24 +73,32 @@ const getBoard = (pieces, turn) => {
     const inGameTiles = []
     const whiteCaptured = []
     const blackCaptured = []
+    let lastMov
     Object.entries(pieces).forEach(p => {
-        const movs = Object.keys(p[1]).filter((c) => parseInt(c) <= turn);
-        const maxTurn = movs.reduce((p, c) => {
-            const ci = parseInt(c)
-            return ci > p ? ci : p
-        }, -1)
-
-        if (p[1][maxTurn] !== 'c') {
-            inGameTiles[p[1][maxTurn]] = { piece: p[0], movs: movs.length, maxTurn }
-        } else {
+        const movs = Object.keys(p[1]).map(s => parseInt(s)).sort((a, b) => a - b).filter(c => c <= turn)
+        const maxTurn = movs[movs.length - 1];
+        if (p[1][maxTurn] === 'c') {
             if (p[0].slice(0, 1) === 'w') {
                 whiteCaptured.push(p[0])
             } else {
                 blackCaptured.push(p[0])
             }
+        } else {
+            inGameTiles[p[1][maxTurn]] = { piece: p[0], movs: movs.length, maxTurn }
+            if (maxTurn === turn) {
+                const mov = {
+                    piece: p[0],
+                    orig: p[1][movs[movs.length - 2]],
+                    dest: p[1][movs[movs.length - 1]]
+                }
+
+                if (!lastMov || lastMov.piece.slice(1, 2) === 'r') {
+                    lastMov = mov
+                }
+            }
         }
     })
-    return { inGameTiles, whiteCaptured: sortCaptures(whiteCaptured), blackCaptured: sortCaptures(blackCaptured) }
+    return { inGameTiles, whiteCaptured: sortCaptures(whiteCaptured), blackCaptured: sortCaptures(blackCaptured), lastMov }
 }
 
 const sortCaptures = (list) => {
@@ -106,7 +114,7 @@ const getKingSquares = (c, r) => {
 }
 
 const getKnightSquares = (c, r) => {
-    return [[c + 2, r + 1], [c + 2, r - 1], [c + 1, r - 2], [c - 1, r - 2], [c - 2, r - 1], [c - 2, r + 1], [c - 1, r + 2]]
+    return [[c + 1, r + 2], [c + 2, r + 1], [c + 2, r - 1], [c + 1, r - 2], [c - 1, r - 2], [c - 2, r - 1], [c - 2, r + 1], [c - 1, r + 2]]
 }
 
 const getAllAttackedByEnemy = (board, myColor) => {

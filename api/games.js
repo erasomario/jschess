@@ -1,7 +1,5 @@
-const { json } = require("express");
 const express = require("express")
 const Game = require("../model/Games")
-const Piece = require('../model/Piece')
 const { getBoard, getAttacked, getCastling } = require('../utils/Chess')
 var router = express.Router();
 
@@ -9,13 +7,13 @@ router.post("/", function (req, res) {
     const game = new Game()
     const rand = Math.random()
     if (rand <= 0.5) {
-        game.whiteId = req.body.userId;
-        game.blackId = req.user.id;
+        game.whiteId = req.body.userId;//choosen opponent
+        game.blackId = req.user.id;//me
         game.createdBy = 'b';
     } else {
-        game.whiteId = req.user.id;
-        game.blackId = req.body.userId;
-        game.createdBy = 'b';
+        game.whiteId = req.user.id;//me
+        game.blackId = req.body.userId;//choosen opponent
+        game.createdBy = 'w';
     }
 
     game.pieces = {
@@ -61,7 +59,7 @@ router.post("/:id/moves", (req, res) => {
                 try {
                     const game = Game.dto(mGame.toObject({ flattenMaps: true, virtuals: true }))
                     const myColor = req.user.id === game.whitePlayerId ? 'w' : 'b'
-                    const myTurn = mGame.current === myColor
+                    const myTurn =  myColor === 'w' ? game.turn % 2 === 0 : game.turn % 2 !== 0
                     const src = req.body.src
                     const dest = req.body.dest
                     const piece = req.body.piece

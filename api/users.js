@@ -143,16 +143,13 @@ router.get("/:id/games/:status", (req, res) => {
                 res.status(500).json(error)
             } else {
                 const m = data.map(g => {
-                    let playerName
-                    let turn
+                    let opponent
                     if (g.whiteId.id === req.user.id) {
-                        playerName = g.blackId.username
-                        turn = g.current === 'w' ? 'Su turno' : `Turno de ${g.blackId.username}`
+                        opponent = g.blackId.username
                     } else {
-                        playerName = g.whiteId.username
-                        turn = g.current === 'b' ? 'Su turno' : `Turno de ${g.whiteId.username}`
+                        opponent = g.whiteId.username
                     }
-                    return { id: g.id, playerName, turn }
+                    return { id: g.id, opponent, whiteId: g.whiteId.id, blackId: g.blackId.id, turn: g.turn }
                 })
                 console.log(m);
                 res.status(200).json(m)

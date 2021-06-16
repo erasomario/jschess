@@ -3,5 +3,5 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 COPY . .
 RUN npm install
-EXPOSE 3000/tcp
+EXPOSE 4000/tcp
 CMD node app.js
