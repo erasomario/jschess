@@ -1,5 +1,5 @@
 const aes = require('aes-js');
-const User = require("./users");
+const User = require("./Users");
 const aesKey = aes.utils.utf8.toBytes("Yp3s6v9y$B&E)H@McQfThWmZq4t7w!z%");
 
 const whiteList = [    
@@ -49,7 +49,7 @@ var middleware = (req, res, next) => {
     }
 }
 
-generateApiKey = (login, password, callback) => {
+const generateApiKey = (login, password, callback) => {
     User.findOne({ $or: [{ username: login }, { email: login }] }, (err, user) => {
         if (err) {
             callback(err, null)

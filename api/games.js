@@ -1,6 +1,7 @@
 const express = require("express")
 const Game = require("../model/Games")
 const { getBoard, getAttacked, getCastling } = require('../utils/Chess')
+const connections = require('../model/Sockets')
 var router = express.Router();
 
 router.post("/", function (req, res) {
@@ -59,13 +60,12 @@ router.post("/:id/moves", (req, res) => {
                 try {
                     const game = Game.dto(mGame.toObject({ flattenMaps: true, virtuals: true }))
                     const myColor = req.user.id === game.whitePlayerId ? 'w' : 'b'
-                    const myTurn =  myColor === 'w' ? game.turn % 2 === 0 : game.turn % 2 !== 0
+                    const myTurn = myColor === 'w' ? game.turn % 2 === 0 : game.turn % 2 !== 0
                     const src = req.body.src
                     const dest = req.body.dest
                     const piece = req.body.piece
 
                     if (myTurn) {
-                        console.log(req.body);
                         //{piece: "wp4", src: "42", dest: "44"}
                         const tiles = getBoard(game.pieces, mGame.turn).inGameTiles
 
@@ -77,11 +77,19 @@ router.post("/:id/moves", (req, res) => {
                                     mGame.pieces[tiles[dest].piece].set(`${mGame.turn}`, 'c')
                                 }
                                 mGame.pieces[piece].set(`${mGame.turn}`, req.body.dest)
-                                mGame.save((error, game) => {
+                                mGame.save((error, savedGame) => {
                                     if (error) {
                                         res.status(500).end();
                                     } else {
-                                        res.status(200).json(Game.dto(game))
+                                        res.status(200).json(Game.dto(savedGame))
+                                        if (myColor === 'b' && connections.has(game.whitePlayerId)) {
+                                            console.log("Notifing white player");
+                                            connections.get(game.whitePlayerId).emit('gameTurnChanged', { id: game.id })
+                                        }
+                                        if (myColor === 'w' && connections.has(game.blackPlayerId)) {
+                                            console.log("Notifing black player");
+                                            connections.get(game.blackPlayerId).emit('gameTurnChanged', { id: game.id })
+                                        }
                                     }
                                 })
                             } else {

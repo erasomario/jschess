@@ -1,7 +1,6 @@
 const express = require('express');
 const ApiKey = require('../model/apiKeys');
 const router = express.Router();
-const User = require('../model/users')
 
 router.post("/", function (req, res) {
     if (Object.keys(req.body).length === 0) {

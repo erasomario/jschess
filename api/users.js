@@ -1,5 +1,5 @@
 const express = require("express");
-const User = require("../model/users");
+const User = require("../model/Users");
 const Game = require("../model/Games");
 
 var router = express.Router();
@@ -80,7 +80,6 @@ router.put("/:id/password", (req, res) => {
                 }
                 res.status(400).json({ error: msg });
             });
-
         } else {
             res.status(400).json({ error: "Debe escribir una contraseña" });
         }
@@ -151,11 +150,9 @@ router.get("/:id/games/:status", (req, res) => {
                     }
                     return { id: g.id, opponent, whiteId: g.whiteId.id, blackId: g.blackId.id, turn: g.turn }
                 })
-                console.log(m);
                 res.status(200).json(m)
             }
         });
 });
-
 
 module.exports = router;
