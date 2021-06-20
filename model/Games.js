@@ -6,7 +6,7 @@ const gameSchema = Schema({
     blackId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
     createdBy: { type: String, enum: ['w', 'b'], required: true },
     createdAt: { type: Date, default: Date.now, required: true },
-    status: { type: String, enum: ['open', 'closed'], default: 'open', required: true },
+    result: { type: String, enum: ['w', 'b', 'd'], required: false },
     turn: { type: Number, default: 0 },
     movs: [String],
     pieces: {

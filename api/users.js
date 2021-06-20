@@ -133,7 +133,9 @@ router.get("/:id/games/:status", (req, res) => {
     if (req.params.id !== req.user.id) {
         res.status(500).end();
     }
-    Game.find({ $or: [{ whiteId: req.user.id }, { blackId: req.user.id }], status: req.params.status })
+    Game.find()
+        .or([{ whiteId: req.user.id }, { blackId: req.user.id }])
+        .exists('result', req.params.status !== 'open')
         .sort({ createdAt: 'desc' })
         .populate('whiteId')
         .populate('blackId')

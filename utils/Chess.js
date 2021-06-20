@@ -2,31 +2,48 @@ const isMine = (myColor, piece) => {
     return (myColor === piece[0])
 }
 
+const simulateMov = (board, orig, dest) => {
+    const newBoard = []
+    Object.keys(board).forEach((square) => {
+        if (square !== orig && square !== dest) {
+            newBoard[square] = board[square]
+        }
+    })
+    newBoard[dest] = { piece: board[orig].piece, movs: board[orig].movs + 1 }
+    return newBoard
+}
+
+const isKingAttacked = (board, myColor) => {
+    const king = `${myColor}k1`
+    const attacked = getAllAttackedByEnemy(board, myColor)
+    for (const square of Object.keys(board)) {
+        if (board[square].piece === king) {
+            const att = attacked.includes(square)
+            return att
+        }
+    }
+    return false
+}
+
 const scanTileK = (arr, board, myColor, cOrig, rOrig, cDest, rDest) => {
     if (cDest >= 1 && cDest <= 8 && rDest >= 1 && rDest <= 8) {
         const dest = `${cDest}${rDest}`;
         const orig = `${cOrig}${rOrig}`;
 
+        //if the dest square is empty or occupied by an enemy piece, I'll check if it's safe to go that square 
         if (!board[dest] || !isMine(myColor, board[dest].piece)) {
-            const newBoard = []
-            Object.keys(board).forEach((square) => {
-                if (square !== orig && square !== dest) {
-                    newBoard[square] = board[square]
-                }
-            })
-            newBoard[dest] = { piece: board[orig].piece, movs: board[orig].movs + 1 }
-
+            const newBoard = simulateMov(board, orig, dest)
             let attacked = false
             for (const square of Object.keys(newBoard)) {
                 const piece = newBoard[square].piece
                 if (piece[0] !== myColor) {
                     if (piece[1] !== 'k') {
-                        if (getAttacked(newBoard, piece[0], parseInt(square[0]), parseInt(square[1])).includes(dest)) {
+                        //if it's my turn it means the enemy king is not under attack, so, there's no need to check
+                        if (getAttacked(newBoard, piece[0], parseInt(square[0]), parseInt(square[1]), false).includes(dest)) {
                             attacked = true
                             break
                         }
                     } else {
-                        //TODO, Si una de estas casillas estuviera bajo ataque de una pieza de mi color, si podría ir allá
                         if (getKingSquares(parseInt(square[0]), parseInt(square[1])).map(a => `${a[0]}${a[1]}`).includes(dest)) {
                             attacked = true
                             break
@@ -85,7 +102,8 @@ const getBoard = (pieces, turn) => {
             }
         } else {
             inGameTiles[p[1][maxTurn]] = { piece: p[0], movs: movs.length, maxTurn }
-            if (maxTurn === turn) {
+            // inGamePieces[p[0]] = { tile: p[1][maxTurn], movs: movs.length, maxTurn }
+            if (maxTurn === turn && turn > 0) {
                 const mov = {
                     piece: p[0],
                     orig: p[1][movs[movs.length - 2]],
@@ -98,7 +116,7 @@ const getBoard = (pieces, turn) => {
             }
         }
     })
-    return { inGameTiles, whiteCaptured: sortCaptures(whiteCaptured), blackCaptured: sortCaptures(blackCaptured), lastMov }
+    return { inGameTiles, whiteCaptured: sortCaptures(whiteCaptured), blackCaptured: sortCaptures(blackCaptured), lastMov, turn }
 }
 
 const sortCaptures = (list) => {
@@ -117,15 +135,25 @@ const getKnightSquares = (c, r) => {
     return [[c + 1, r + 2], [c + 2, r + 1], [c + 2, r - 1], [c + 1, r - 2], [c - 1, r - 2], [c - 2, r - 1], [c - 2, r + 1], [c - 1, r + 2]]
 }
 
+const getAllAttackedByMe = (board, myColor) => {
+    let total = 0
+    for (const square of Object.keys(board)) {
+        if (board[square].piece.slice(0, 1) === myColor) {
+            total += getAttacked(board, myColor, parseInt(square[0]), parseInt(square[1])).length;
+        }
+    }
+    return total
+}
+
 const getAllAttackedByEnemy = (board, myColor) => {
     const enemySquares = Object.keys(board).filter(s => board[s] && board[s].piece.slice(0, 1) !== myColor)
     let attacked = []
     enemySquares.forEach(s => {
-        attacked = attacked.concat(getAttacked(board, myColor === 'w' ? 'b' : 'w', parseInt(s.slice(0, 1)), parseInt(s.slice(1, 2))))
+        //if it's my turn to play, it means the enemy king is not under attack, no there's no need to check
+        attacked = attacked.concat(getAttacked(board, myColor === 'w' ? 'b' : 'w', parseInt(s.slice(0, 1)), parseInt(s.slice(1, 2)), false))
     })
     return attacked
 }
-
 
 const getCastling = (board, myColor, c, r) => {
     const attacked = getAllAttackedByEnemy(board, myColor)
@@ -155,16 +183,14 @@ const getCastling = (board, myColor, c, r) => {
 
 
 /*list of squares attacked from the square c, r */
-const getAttacked = (board, myColor, c, r) => {
-    const arr = []
+const getAttacked = (board, myColor, c, r, checkForKingAttacks = true) => {
+    let arr = []
     const tile = `${c}${r}`
     const piece = board[tile].piece
     const type = piece.slice(1, -1)
     const color = piece.slice(0, 1)
 
     if (type === 'k') {
-        //TODO king must not be left on a position where it's under attack
-        //TODO castling
         getKingSquares(c, r).forEach(a => scanTileK(arr, board, myColor, c, r, a[0], a[1]))
     } else if (type === 'r') {
         scanRow(arr, board, myColor, c, r, 0, 1)
@@ -209,7 +235,14 @@ const getAttacked = (board, myColor, c, r) => {
             }
         }
     }
+    //remove every move that would left my king under attack
+    if (checkForKingAttacks) {
+        arr = arr.filter(s => {
+            const sim = simulateMov(board, tile, s)
+            return !isKingAttacked(sim, myColor)
+        })
+    }
     return arr
 }
 
-module.exports = { getBoard, getAttacked, getCastling }
+module.exports = { getBoard, getAttacked, getCastling, isKingAttacked }
