@@ -1,11 +1,9 @@
-const express = require('express');
-const app = express();
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server, {
-    cors: {}
-});
+const express = require('express')
+const app = express()
+const http = require('http')
+const server = http.createServer(app)
+const { Server } = require("socket.io")
+const io = new Server(server, { cors: {} })
 
 const mongoose = require("mongoose");
 const path = require("path");
@@ -13,7 +11,7 @@ const v1 = require("./api/v1.js");
 const v2 = require("./api/v2.js");
 const ApiKey = require("./model/apiKeys");
 const cors = require('cors')
-const connections = require('./model/Sockets')
+const { connected, disconnected } = require('./model/Sockets')
 
 const mongooseParams = {
     useNewUrlParser: true,
@@ -48,14 +46,10 @@ app.use(function (err, req, res, next) {
     res.status(500).end()
 });
 
-io.on('connection', (socket) => {
-    console.log('a user connected');
-    socket.on('link', ({ id }) => {
-        console.log('userLinked');
-        connections.set(id, socket)
-    })
+io.on('connection', (socket) => {    
+    connected(socket.handshake.query.id, socket)
     socket.on('disconnect', () => {
-        console.log('user disconnected');
+        disconnected(socket.handshake.query.id, socket)
     });
 });
 

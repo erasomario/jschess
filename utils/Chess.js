@@ -57,8 +57,6 @@ const getBoard = (movs, turn) => {
             }
         } else if (m.prom) {
             board[m.dRow][m.dCol] = m.prom
-        } else {
-
         }
     })
     if (lastMovedPiece) {
@@ -274,4 +272,4 @@ const getAttacked = (board, touched, myColor, c, r, checkForKingAttacks = true) 
     return arr
 }
 
-module.exports = { getBoard, getAttacked, getCastling, isKingAttacked, includes }
+module.exports = { getBoard, getAttacked, getCastling, isKingAttacked, getAllAttackedByMe, includes }
