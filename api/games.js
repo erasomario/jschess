@@ -1,6 +1,6 @@
 const express = require("express")
 const Game = require("../model/Games")
-const { getBoard, getAttacked, getCastling, isKingAttacked, includes } = require('../utils/Chess')
+const { getBoard, getAttacked, getCastling, includes } = require('../utils/Chess')
 const connections = require('../model/Sockets')
 var router = express.Router();
 
@@ -108,6 +108,7 @@ router.post("/:id/moves", (req, res) => {
                         if (!includes(attacked, dest[0], dest[1])) {
                             throw { error: "Destination can't be reached" }
                         }
+                        
                         if (tiles[dest[1]][dest[0]]) {
                             //there was a capture
                         }

@@ -26,15 +26,24 @@ const getBoard = (movs, turn) => {
     const whiteCaptured = []
     const blackCaptured = []
     const touched = []
+    const lastMovedPiece = turn > 0 ? board[movs[turn - 1].sRow][movs[turn - 1].sCol] : null
     movs.slice(0, turn).forEach(m => {
         const srcPiece = board[m.sRow][m.sCol]
         const destPiece = board[m.dRow][m.dCol]
         if (destPiece) {
             (destPiece.slice(0, 1) === 'w' ? whiteCaptured : blackCaptured).push(destPiece)
         }
+
         if (!touched.includes(srcPiece)) {
             touched.push(srcPiece)
         }
+
+        if (srcPiece.slice(1, 2) === 'p' && m.sCol !== m.dCol && !destPiece) {
+            const capt = board[m.sRow][m.dCol];
+            board[m.sRow][m.dCol] = null;
+            (capt.slice(0, 1) === 'w' ? whiteCaptured : blackCaptured).push(capt)
+        }
+
         board[m.dRow][m.dCol] = srcPiece
         board[m.sRow][m.sCol] = null
 
@@ -48,8 +57,13 @@ const getBoard = (movs, turn) => {
             }
         } else if (m.prom) {
             board[m.dRow][m.dCol] = m.prom
+        } else {
+
         }
     })
+    if (lastMovedPiece) {
+        touched.push(lastMovedPiece)
+    }
     return { inGameTiles: board, whiteCaptured: sortCaptures(whiteCaptured), blackCaptured: sortCaptures(blackCaptured), touched, turn }
 }
 
@@ -239,6 +253,15 @@ const getAttacked = (board, touched, myColor, c, r, checkForKingAttacks = true) 
             if (myColor !== board[r + delta][c - 1].slice(0, 1)) {
                 arr.push([c - 1, r + delta])
             }
+        }
+        //passing
+        const pass1 = board[r][c - 1]
+        if (pass1 && ((pass1[0] !== myColor && pass1[1] === 'p') && ((myColor === 'w' && r === 4) || (myColor === 'b' && r === 3)) && touched[touched.length - 1] === pass1)) {
+            arr.push([c - 1, r + delta])
+        }
+        const pass2 = board[r][c + 1]
+        if (pass2 && ((pass2[0] !== myColor && pass2[1] === 'p') && ((myColor === 'w' && r === 4) || (myColor === 'b' && r === 3)) && touched[touched.length - 1] === pass2)) {
+            arr.push([c + 1, r + delta])
         }
     }
     //remove every move that would left my king under attack
