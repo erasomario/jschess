@@ -69,6 +69,8 @@ router.post("/:id/moves", (req, res) => {
                     let touched = board.touched
                     let tiles = board.inGameTiles
 
+                    let capture = false;
+
                     console.log('tyring to save');
 
                     if (!tiles[src[1]][src[0]]) {
@@ -111,7 +113,7 @@ router.post("/:id/moves", (req, res) => {
                         }
 
                         if (tiles[dest[1]][dest[0]]) {
-                            //there was a capture
+                            capture = true
                         }
                         game.movs.push({ sCol: src[0], sRow: src[1], dCol: dest[0], dRow: dest[1] })
                     }
@@ -131,6 +133,26 @@ router.post("/:id/moves", (req, res) => {
                     if (kingAttacked && possibleMoves === 0) {
                         game.result = myColor
                     }
+
+                    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+                    const getTileName = (c, r) => `${letters[c]}${r + 1}`
+
+                    let label
+                    if (piece.slice(1, 2) === 'p') {
+                        if (capture) {
+                            label = `${letters[dest[0]]}x${getTileName(dest[0], dest[1])}`
+                        } else {
+                            label = getTileName(dest[0], dest[1])
+                        }
+                    } else {
+                        label = `${piece.slice(1, 2).toUpperCase()}${capture ? 'x' : ''}${getTileName(dest[0], dest[1])}`
+                    }
+
+                    if (!label) {
+                        throw { error: "No label has been defined for that movement" }
+                    }
+
+                    game.movs[game.movs.length - 1].label = label
 
                     game.save((error, savedGame) => {
                         if (error) {

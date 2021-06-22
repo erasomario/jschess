@@ -7,7 +7,8 @@ const movSchema = Schema({
     dCol: { type: Number, required: true },
     dRow: { type: Number, required: true },
     cast: { type: String, enum: ['l', 's'], required: false },
-    prom: { type: String, required: false }
+    prom: { type: String, required: false },
+    label: { type: String, required: true }
 });
 
 const gameSchema = Schema({
