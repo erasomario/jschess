@@ -69,7 +69,9 @@ router.post("/:id/moves", (req, res) => {
                     let touched = board.touched
                     let tiles = board.inGameTiles
 
-                    let capture = false;
+                    let label
+                    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+                    const getTileName = (c, r) => `${letters[c]}${r + 1}`
 
                     console.log('tyring to save');
 
@@ -87,6 +89,7 @@ router.post("/:id/moves", (req, res) => {
                         if (!includes(getCastling(tiles, touched, myColor, src[0], src[1]), dest[0], dest[1])) {
                             throw { error: 'invalid castling' }
                         }
+                        label = (dest[0] === 6 ? '0-0' : '0-0-0')
                         game.movs.push({ sCol: src[0], sRow: src[1], dCol: dest[0], dRow: dest[1], cast: dest[0] === 6 ? 's' : 'l' })
                     } else if (prom) {
                         if (piece[1] !== 'p') {
@@ -106,14 +109,21 @@ router.post("/:id/moves", (req, res) => {
                             }
                         }))
                         game.movs.push({ sCol: src[0], sRow: src[1], dCol: dest[0], dRow: dest[1], prom: `${myColor}${prom}${pieces + 1}` })
+                        label = getTileName(dest[0], dest[1]) + "=" + prom.toUpperCase()
                     } else {
                         const attacked = getAttacked(tiles, touched, myColor, src[0], src[1])
                         if (!includes(attacked, dest[0], dest[1])) {
                             throw { error: "Destination can't be reached" }
                         }
-
-                        if (tiles[dest[1]][dest[0]]) {
-                            capture = true
+                        const capture = tiles[dest[1]][dest[0]]
+                        if (piece.slice(1, 2) === 'p') {
+                            if (capture) {
+                                label = `${letters[src[0]]}x${getTileName(dest[0], dest[1])}`
+                            } else {
+                                label = getTileName(dest[0], dest[1])
+                            }
+                        } else {
+                            label = `${piece.slice(1, 2).toUpperCase()}${capture ? 'x' : ''}${getTileName(dest[0], dest[1])}`
                         }
                         game.movs.push({ sCol: src[0], sRow: src[1], dCol: dest[0], dRow: dest[1] })
                     }
@@ -123,34 +133,24 @@ router.post("/:id/moves", (req, res) => {
                     touched = board.touched
                     tiles = board.inGameTiles
 
+
                     const kingAttacked = isKingAttacked(tiles, touched, myColor === 'w' ? 'b' : 'w')
                     const possibleMoves = getAllAttackedByMe(tiles, touched, myColor === 'w' ? 'b' : 'w').length
-
-                    if (!kingAttacked && possibleMoves === 0) {
-                        game.result = 'd'
-                    }
-
-                    if (kingAttacked && possibleMoves === 0) {
-                        game.result = myColor
-                    }
-
-                    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-                    const getTileName = (c, r) => `${letters[c]}${r + 1}`
-
-                    let label
-                    if (piece.slice(1, 2) === 'p') {
-                        if (capture) {
-                            label = `${letters[dest[0]]}x${getTileName(dest[0], dest[1])}`
-                        } else {
-                            label = getTileName(dest[0], dest[1])
-                        }
-                    } else {
-                        label = `${piece.slice(1, 2).toUpperCase()}${capture ? 'x' : ''}${getTileName(dest[0], dest[1])}`
-                    }
 
                     if (!label) {
                         throw { error: "No label has been defined for that movement" }
                     }
+
+                    if (!kingAttacked && possibleMoves === 0) {
+                        game.result = 'd'
+                        label += '1/2'
+                    } else if (kingAttacked && possibleMoves === 0) {
+                        game.result = myColor
+                        label += ('++' + myColor == 'w' ? '1-0' : '0-1')
+                    } else if (kingAttacked) {
+                        label += '+'
+                    }
+
 
                     game.movs[game.movs.length - 1].label = label
 
@@ -163,12 +163,12 @@ router.post("/:id/moves", (req, res) => {
 
                             if (myColor === 'b') {
                                 console.log("Notifing white player");
-                                let msg = `${game.whiteId.username} hizo una jugada`
+                                let msg = `${game.blackId.username} hizo una jugada`
                                 send([game.whiteId.id], 'gameTurnChanged', { id: game.id, msg })
                             }
                             if (myColor === 'w') {
                                 console.log("Notifing black player");
-                                let msg = `${game.blackId.username} hizo una jugada`
+                                let msg = `${game.whiteId.username} hizo una jugada`
                                 send([game.blackId.id], 'gameTurnChanged', { id: game.id, msg })
                             }
                         }
