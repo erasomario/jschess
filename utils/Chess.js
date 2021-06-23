@@ -200,6 +200,7 @@ const getCastling = (board, touched, myColor, c, r) => {
     return rta
 }
 
+const onBoard = (c, r) => (c >= 0 && c <= 7 && r >= 0 && r <= 7)
 
 /*list of squares attacked from the square c, r */
 const getAttacked = (board, touched, myColor, c, r, checkForKingAttacks = true) => {
@@ -234,7 +235,7 @@ const getAttacked = (board, touched, myColor, c, r, checkForKingAttacks = true) 
     } else if (type === 'p') {
         const delta = color === 'w' ? 1 : -1
         //first square
-        if (!board[r + delta][c]) {
+        if (onBoard(c, r + delta) && !board[r + delta][c]) {
             arr.push([c, r + delta])
             //second square
             if (!touched.includes(piece) && !board[r + delta + delta][c]) {
@@ -242,12 +243,12 @@ const getAttacked = (board, touched, myColor, c, r, checkForKingAttacks = true) 
             }
         }
         //attacks
-        if (board[r + delta][c + 1]) {
+        if (onBoard(c + 1, r + delta) && board[r + delta][c + 1]) {
             if (myColor !== board[r + delta][c + 1].slice(0, 1)) {
                 arr.push([c + 1, r + delta])
             }
         }
-        if (board[r + delta][c - 1]) {
+        if (onBoard(c - 1, r + delta) && board[r + delta][c - 1]) {
             if (myColor !== board[r + delta][c - 1].slice(0, 1)) {
                 arr.push([c - 1, r + delta])
             }

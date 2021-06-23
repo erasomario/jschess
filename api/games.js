@@ -1,7 +1,8 @@
 const express = require("express")
 const Game = require("../model/Games")
 const { getBoard, getAttacked, getCastling, includes, getAllAttackedByMe, isKingAttacked } = require('../utils/Chess')
-const { send } = require('../model/Sockets')
+const { send } = require('../model/Sockets');
+const e = require("cors");
 var router = express.Router();
 
 router.post("/", function (req, res) {
@@ -69,12 +70,6 @@ router.post("/:id/moves", (req, res) => {
                     let touched = board.touched
                     let tiles = board.inGameTiles
 
-                    let label
-                    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-                    const getTileName = (c, r) => `${letters[c]}${r + 1}`
-
-                    console.log('tyring to save');
-
                     if (!tiles[src[1]][src[0]]) {
                         throw { error: 'Empty source' }
                     }
@@ -89,7 +84,6 @@ router.post("/:id/moves", (req, res) => {
                         if (!includes(getCastling(tiles, touched, myColor, src[0], src[1]), dest[0], dest[1])) {
                             throw { error: 'invalid castling' }
                         }
-                        label = (dest[0] === 6 ? '0-0' : '0-0-0')
                         game.movs.push({ sCol: src[0], sRow: src[1], dCol: dest[0], dRow: dest[1], cast: dest[0] === 6 ? 's' : 'l' })
                     } else if (prom) {
                         if (piece[1] !== 'p') {
@@ -109,50 +103,30 @@ router.post("/:id/moves", (req, res) => {
                             }
                         }))
                         game.movs.push({ sCol: src[0], sRow: src[1], dCol: dest[0], dRow: dest[1], prom: `${myColor}${prom}${pieces + 1}` })
-                        label = getTileName(dest[0], dest[1]) + "=" + prom.toUpperCase()
+
                     } else {
                         const attacked = getAttacked(tiles, touched, myColor, src[0], src[1])
                         if (!includes(attacked, dest[0], dest[1])) {
                             throw { error: "Destination can't be reached" }
                         }
-                        const capture = tiles[dest[1]][dest[0]]
-                        if (piece.slice(1, 2) === 'p') {
-                            if (capture) {
-                                label = `${letters[src[0]]}x${getTileName(dest[0], dest[1])}`
-                            } else {
-                                label = getTileName(dest[0], dest[1])
-                            }
-                        } else {
-                            label = `${piece.slice(1, 2).toUpperCase()}${capture ? 'x' : ''}${getTileName(dest[0], dest[1])}`
-                        }
+
                         game.movs.push({ sCol: src[0], sRow: src[1], dCol: dest[0], dRow: dest[1] })
                     }
 
+                    const newBoard = getBoard(game.movs, game.movs.length)
+                    const newTouched = newBoard.touched
+                    const newTiles = newBoard.inGameTiles
 
-                    board = getBoard(game.movs, game.movs.length)
-                    touched = board.touched
-                    tiles = board.inGameTiles
-
-
-                    const kingAttacked = isKingAttacked(tiles, touched, myColor === 'w' ? 'b' : 'w')
-                    const possibleMoves = getAllAttackedByMe(tiles, touched, myColor === 'w' ? 'b' : 'w').length
-
-                    if (!label) {
-                        throw { error: "No label has been defined for that movement" }
-                    }
+                    const kingAttacked = isKingAttacked(newTiles, newTouched, myColor === 'w' ? 'b' : 'w')
+                    const possibleMoves = getAllAttackedByMe(newTiles, newTouched, myColor === 'w' ? 'b' : 'w').length
 
                     if (!kingAttacked && possibleMoves === 0) {
                         game.result = 'd'
-                        label += '1/2'
                     } else if (kingAttacked && possibleMoves === 0) {
                         game.result = myColor
-                        label += ('++' + myColor == 'w' ? '1-0' : '0-1')
-                    } else if (kingAttacked) {
-                        label += '+'
                     }
 
-
-                    game.movs[game.movs.length - 1].label = label
+                    setLabel(game.movs[game.movs.length - 1], tiles, kingAttacked, possibleMoves)
 
                     game.save((error, savedGame) => {
                         if (error) {
@@ -160,16 +134,12 @@ router.post("/:id/moves", (req, res) => {
                             res.status(500).end();
                         } else {
                             res.status(200).json(Game.dto(savedGame))
-
-                            if (myColor === 'b') {
-                                console.log("Notifing white player");
-                                let msg = `${game.blackId.username} hizo una jugada`
-                                send([game.whiteId.id], 'gameTurnChanged', { id: game.id, msg })
-                            }
-                            if (myColor === 'w') {
-                                console.log("Notifing black player");
-                                let msg = `${game.whiteId.username} hizo una jugada`
-                                send([game.blackId.id], 'gameTurnChanged', { id: game.id, msg })
+                            if (game.result) {
+                                //notify both that the game is over
+                            } else {
+                                let msg = `${myColor === 'b' ? game.blackId.username : game.whiteId.username} hizo una jugada`
+                                console.log(`Notifing ${myColor === 'b' ? 'white' : 'black'} player`);
+                                send([myColor === 'b' ? game.whiteId.id : game.blackId.id], 'gameTurnChanged', { id: game.id, msg })
                             }
                         }
                     })
@@ -185,5 +155,27 @@ router.post("/:id/moves", (req, res) => {
             }
         })
 })
+
+const setLabel = (mov, board, kingAttacked, possibleMoves) => {
+    const piece = board[mov.sRow][mov.sCol]
+    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+    const getTileName = (c, r) => `${letters[c]}${r + 1}`
+    const capture = board[mov.dRow][mov.dCol]
+    const suf = kingAttacked ? (possibleMoves > 0 ? '+' : '#') : ''
+    if (mov.cast) {
+        mov.label = (mov.cast === 's' ? '0-0' : '0-0-0') + suf
+    } else {
+        if (piece.slice(1, 2) === 'p') {
+            const prom = mov.prom ? `${mov.prom.toUpperCase()}` : ''
+            if (capture) {
+                mov.label = `${letters[mov.sCol]}x${getTileName(mov.dCol, mov.dRow)}${prom.slice(1, 2).toUpperCase()}${suf}`
+            } else {
+                mov.label = `${getTileName(mov.dCol, mov.dRow)}${prom}${suf}`
+            }
+        } else {
+            mov.label = `${piece.slice(1, 2).toUpperCase()}${capture ? 'x' : ''}${getTileName(mov.dCol, mov.dRow)}${suf}`
+        }
+    }
+}
 
 module.exports = router;
