@@ -8,7 +8,8 @@ const movSchema = Schema({
     dRow: { type: Number, required: true },
     cast: { type: String, enum: ['l', 's'], required: false },
     prom: { type: String, required: false },
-    label: { type: String, required: true }
+    label: { type: String, required: true },
+    time: { type: Number },
 });
 
 const gameSchema = Schema({
@@ -16,8 +17,11 @@ const gameSchema = Schema({
     blackId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
     createdBy: { type: String, enum: ['w', 'b'], required: true },
     createdAt: { type: Date, default: Date.now, required: true },
+    lastMovAt: { type: Date, default: Date.now, required: false },
     result: { type: String, enum: ['w', 'b', 'd'], required: false },
-    movs: [movSchema]
+    movs: [movSchema],
+    time: {type: Number},
+    addition: { type: Number },
 });
 
 gameSchema.statics.dto = function (dao) {

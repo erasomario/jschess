@@ -2,21 +2,31 @@ const express = require("express")
 const Game = require("../model/Games")
 const { getBoard, getAttacked, getCastling, includes, getAllAttackedByMe, isKingAttacked } = require('../utils/Chess')
 const { send } = require('../model/Sockets');
-const e = require("cors");
 var router = express.Router();
 
 router.post("/", function (req, res) {
     const game = new Game()
-    const rand = Math.random()
-    if (rand <= 0.5) {
-        game.whiteId = req.body.userId;//choosen opponent
-        game.blackId = req.user.id;//me
-        game.createdBy = 'b';
-    } else {
+    
+    if (!req.body.color) {
+        throw { error: 'Request should specify a color' }
+    }
+    if (['w', 'b', 'wb'].includes(req.body.color)) {
+        throw { error: 'Color shoud be w b or wb' }
+    }
+    if (req.body.time) {
+        throw { error: 'Request should include a time' }
+    }
+
+    if (req.body.color === 'w' || (req.body.color === 'wb' && Math.random() <= 0.5)) {
         game.whiteId = req.user.id;//me
         game.blackId = req.body.userId;//choosen opponent
         game.createdBy = 'w';
+    } else {
+        game.whiteId = req.body.userId;//choosen opponent
+        game.blackId = req.user.id;//me
+        game.createdBy = 'b';
     }
+
     game.movs = []
     game.save((error, game) => {
         if (error) {
