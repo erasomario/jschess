@@ -9,9 +9,9 @@ const mongoose = require("mongoose");
 const path = require("path");
 const v1 = require("./api/v1.js");
 const v2 = require("./api/v2.js");
-const ApiKey = require("./model/apiKeys");
 const cors = require('cors')
 const { connected, disconnected } = require('./model/Sockets')
+const { middleware } = require('./model/authMiddleware.js')
 
 const mongooseParams = {
     useNewUrlParser: true,
@@ -38,15 +38,21 @@ db.once('open', function () {
 
 app.use(cors())
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(ApiKey.middleware);
+app.use(middleware);
 app.use(express.json());
 app.use("/api/v1", v1);
 app.use("/api/v2", v2);
 app.use(function (err, req, res, next) {
-    res.status(500).end()
+    if (!err) {
+        console.log("Unexpected error");
+        res.status(500).end()
+    } else {
+        console.log(err)
+        res.status(500).json({ error: err })
+    }
 });
 
-io.on('connection', (socket) => {    
+io.on('connection', (socket) => {
     connected(socket.handshake.query.id, socket)
     socket.on('disconnect', () => {
         disconnected(socket.handshake.query.id, socket)
