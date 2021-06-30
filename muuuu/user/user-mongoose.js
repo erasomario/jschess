@@ -30,12 +30,12 @@ const addUser = (raw) => {
     return findUsersByAttr('username', usr.username)
         .then(lst => {
             if (lst.length > 0) {
-                throw new Error('Ya existe un usuario con ese nombre')
+                throw Error('Ya existe un usuario con ese nombre')
             }
             return findUsersByAttr('email', usr.email)
         }).then(lst => {
             if (lst.length > 0) {
-                throw new Error('Ya existe un usuario con ese mail')
+                throw Error('Ya existe un usuario con ese mail')
             }
             usr.password = bcryptHash(usr.password)
             return usr.save()
@@ -60,7 +60,7 @@ const editUser = (user) => {
 }
 
 const findUserById = (id) => {
-    User.findById(id).then(serializeOne)
+    return User.findById(id).then(serializeOne)
 }
 
 const findUsersByAttr = (attr, value) => {
@@ -78,6 +78,16 @@ const findByLogin = (login) => {
     })
 }
 
+const findWithUserNameLike = (like) => {
+    return new Promise((res, rej) => {
+        if (like.length < 3) {
+            rej(Error('Debe escribir al menos 3 letras'))
+        } else {
+            res(User.find({ username: new RegExp(like, "i") }))
+        }
+    }).then(serialize)
+}
+
 const serializeOne = ({ id, email, username, password, createdAt, recoveryKey }) => {
     const { key: recKey, createdAt: recCreatedAt } = recoveryKey
     return { id, email, username, password, createdAt, recoveryKey: { key: recKey, createdAt: recCreatedAt } }
@@ -93,4 +103,4 @@ const serialize = (data) => {
     return serializeOne(data)
 }
 
-module.exports = { addUser, editUser, findUserById, findUsersByAttr, findByLogin }
+module.exports = { addUser, editUser, findUserById, findUsersByAttr, findByLogin, findWithUserNameLike }

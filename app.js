@@ -42,7 +42,7 @@ app.use(middleware);
 app.use(express.json());
 app.use("/api/v1", v1);
 app.use("/api/v2", v2);
-app.use(function (err, req, res, next) {
+/*app.use(function (err, req, res, next) {
     if (!err) {
         console.log("Unexpected error");
         res.status(500).end()
@@ -50,7 +50,7 @@ app.use(function (err, req, res, next) {
         console.log(err)
         res.status(500).json({ error: err })
     }
-});
+});*/
 
 io.on('connection', (socket) => {
     connected(socket.handshake.query.id, socket)

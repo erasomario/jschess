@@ -1,6 +1,7 @@
 const express = require("express");
 const Game = require("../model/Games");
-const { addUser, recoverPassword } = require("../muuuu/user/user-controller");
+const makeUserDto = require("../muuuu/user-dto/user-dto-model");
+const { addUser, recoverPassword, findUserById, findWithUserNameLike } = require("../muuuu/user/user-controller");
 
 var router = express.Router();
 
@@ -19,29 +20,22 @@ router.post("/", function (req, res) {
 })
 
 router.get("/", (req, res) => {
-    if (req.query.like.trim().length < 1) {
-        res.status(400).json({ error: "Debe escribir almenos 3 letras" });
-    } else {
-        User.find({ username: new RegExp(req.query.like, "i") }, (error, users) => {
-            if (error) {
-                res.status(500).end();
-            } else {
-                res.json(users.map(User.dto));
-            }
-        });
-    }
+    findWithUserNameLike(req.query.like)
+        .then(usrs => usrs.map(u => makeUserDto(u)))
+        .then(usrs => res.status(200).json(usrs))
+        //.catch(error => res.status(500).json({ error: error.message }))
 });
 
 router.get("/:id", (req, res) => {
-    User.findById(req.params.id, (error, user) => {
-        if (error) {
-            res.status(500).end();
-        } else if (!user) {
-            res.status(400).json({ error: "No se encontró el usuario" });
-        } else {
-            res.json(User.dto(user));
-        }
-    });
+    findUserById(req.params.id)
+        .then(usr => {
+            if (!usr) {
+                throw Error('No se encontró el usuario')
+            }
+            return makeUserDto(usr)
+        })
+        .then(usr => res.json(usr))
+        .catch(error => res.status(500).json({ error: error.message }))
 });
 
 router.put("/:id/password", (req, res) => {
