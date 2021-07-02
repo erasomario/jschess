@@ -10,8 +10,8 @@ const path = require("path");
 const v1 = require("./api/v1.js");
 const v2 = require("./api/v2.js");
 const cors = require('cors')
-const { connected, disconnected } = require('./model/Sockets')
-const { middleware } = require('./model/authMiddleware.js')
+const { connected, disconnected } = require('./utils/Sockets')
+const { middleware } = require('./middleware/authMiddleware.js')
 
 const mongooseParams = {
     useNewUrlParser: true,

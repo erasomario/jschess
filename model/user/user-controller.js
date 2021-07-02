@@ -1,9 +1,15 @@
-const { generateApiKey } = require('../../model/apiKeys')
+const Joi = require('joi')
+const { generateApiKey } = require('../../utils/apiKeys')
 const { hash, compare } = require('../../utils/Crypt')
+const { validationPromise } = require('../../utils/ValidationPromise')
 const userSrc = require('./user-mongoose')
 
 const login = (login, password) => {
-    return userSrc.findByLogin(login)
+    return validationPromise(Joi.object({
+        login: Joi.string().required().label('usuario o email'),
+        password: Joi.string().required().label('contraseña')
+    }), { login, password })
+        .then(() => userSrc.findByLogin(login))
         .then(u => {
             if (compare(password, u.password)) {
                 return generateApiKey(u)

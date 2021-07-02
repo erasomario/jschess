@@ -1,5 +1,5 @@
-const { decode } = require("./apiKeys");
-const { findUserById } = require("../muuuu/user/user-controller");
+const { decode } = require("../utils/apiKeys");
+const { findUserById } = require("../model/user/user-controller");
 
 const whiteList = [
     { path: new RegExp("^/api/v1/recovery_keys$"), method: "POST" },

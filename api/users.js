@@ -1,5 +1,5 @@
 const express = require("express");
-const Game = require("../model/Games");
+const Game = require("../oldmodel/Games");
 const makeUserDto = require("../muuuu/user-dto/user-dto-model");
 const { addUser, recoverPassword, findUserById, findWithUserNameLike } = require("../muuuu/user/user-controller");
 
