@@ -16,11 +16,4 @@ var encode = (user) => {
     return aes.utils.hex.fromBytes(aesCtr.encrypt(textBytes));
 }
 
-const generateApiKey = (user) => {
-    const rta = { api_key: encode(user), ...user }
-    delete rta.password
-    delete rta.recoveryKey
-    return rta;
-}
-
-module.exports = { generateApiKey, decode }
+module.exports = { encode, decode }

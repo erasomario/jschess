@@ -1,4 +1,4 @@
-const { decode } = require("../utils/apiKeys");
+const { decode } = require("../model/api-key/api-key-controller");
 const { findUserById } = require("../model/user/user-controller");
 
 const whiteList = [

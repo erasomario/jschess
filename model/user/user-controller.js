@@ -1,7 +1,8 @@
 const Joi = require('joi')
-const { generateApiKey } = require('../../utils/apiKeys')
 const { hash, compare } = require('../../utils/Crypt')
 const { validationPromise } = require('../../utils/ValidationPromise')
+const makeApiKey = require('../api-key/api-key-model')
+const makeUserDto = require('../user-dto/user-dto-model')
 const userSrc = require('./user-mongoose')
 
 const login = (login, password) => {
@@ -12,7 +13,7 @@ const login = (login, password) => {
         .then(() => userSrc.findByLogin(login))
         .then(u => {
             if (compare(password, u.password)) {
-                return generateApiKey(u)
+                return makeApiKey(makeUserDto(u))
             } else {
                 throw Error('Contraseña incorrecta')
             }

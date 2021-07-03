@@ -1,6 +1,7 @@
 const messages = {
     ES: {
-        'any.required': '{{#label}} es obligatorio'
+        'any.required': '{{#label}} es obligatorio',
+        'string.empty': '{{#label}} no debe ser vacío',
     }
 };
 const opts = { messages, errors: { language: 'ES' } }

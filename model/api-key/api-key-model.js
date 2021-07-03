@@ -1,4 +1,5 @@
-const Joi = require('joi');
+const Joi = require('joi')
+const {encode} = require('./api-key-controller')
 
 const schema = Joi.object({
     id: Joi.string().required(),
@@ -6,12 +7,12 @@ const schema = Joi.object({
     username: Joi.string().required()
 })
 
-const makeUserDto = ({id, email, username}) => {
+const makeApiKey = ({id, email, username}) => {
     const { value, error } = schema.validate({id, email, username})
     if (error) {
         throw error
     }
-    return value
+    return { api_key: encode(value), ...value }
 }
 
-module.exports = makeUserDto
+module.exports = makeApiKey

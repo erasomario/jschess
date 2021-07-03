@@ -1,6 +1,8 @@
 const makeUser = require('./user-model')
 const mongoose = require("mongoose");
-const { bcryptHash } = require('../../utils/Crypt');
+const { hash } = require('../../utils/Crypt');
+const makeUserDto = require('../user-dto/user-dto-model');
+const makeApiKey = require('../api-key/api-key-model');
 const { Schema } = mongoose;
 
 const userSchema = Schema({
@@ -17,6 +19,7 @@ const userSchema = Schema({
         }
     },
     createdAt: { type: Date, default: Date.now },
+    pictureType: { type: String },
     recoveryKey: {
         key: String,
         createdAt: Date,
@@ -26,20 +29,26 @@ const userSchema = Schema({
 const User = mongoose.model("User", userSchema);
 
 const addUser = (raw) => {
-    const usr = new User(makeUser(raw))
-    return findUsersByAttr('username', usr.username)
-        .then(lst => {
-            if (lst.length > 0) {
-                throw Error('Ya existe un usuario con ese nombre')
-            }
-            return findUsersByAttr('email', usr.email)
-        }).then(lst => {
-            if (lst.length > 0) {
-                throw Error('Ya existe un usuario con ese mail')
-            }
-            usr.password = bcryptHash(usr.password)
-            return usr.save()
-        }).then(sUsr => serializeOne(sUsr))
+    return new Promise((res, rej) => {
+        const usr = new User(makeUser(raw))
+        findUsersByAttr('username', usr.username)
+            .then(lst => {
+                if (lst.length > 0) {
+                    throw Error('Ya existe un usuario con ese nombre')
+                }
+                return findUsersByAttr('email', usr.email)
+            }).then(lst => {
+                if (lst.length > 0) {
+                    throw Error('Ya existe un usuario con ese mail')
+                }
+                usr.password = hash(usr.password)
+                return usr.save()
+            })
+            .then(sUsr => makeApiKey(makeUserDto(sUsr)))
+            .then(res)
+            .catch(rej)
+    })
+
 }
 
 const editUser = (user) => {
@@ -53,6 +62,7 @@ const editUser = (user) => {
             u.password = user.password
             u.createdAt = user.createdAt
             u.recoveryKey = user.recoveryKey
+            u.pictureType = user.pictureType
             return u
         })
         .then(u => u.save())

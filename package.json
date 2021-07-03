@@ -10,6 +10,7 @@
         "bcrypt-nodejs": "0.0.3",
         "cors": "^2.8.5",
         "express": "^4.17.1",
+        "express-fileupload": "^1.2.1",
         "joi": "^17.4.0",
         "mongoose": "^5.12.2",
         "socket.io": "^4.1.2"

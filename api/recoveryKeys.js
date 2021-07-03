@@ -1,5 +1,5 @@
 const express = require('express')
-const { createRecoveryPass } = require('../muuuu/user/user-controller')
+const { createRecoveryPass } = require('../model/user/user-controller')
 const router = express.Router()
 
 router.post('/', (req, res) => {

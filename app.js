@@ -12,6 +12,7 @@ const v2 = require("./api/v2.js");
 const cors = require('cors')
 const { connected, disconnected } = require('./utils/Sockets')
 const { middleware } = require('./middleware/authMiddleware.js')
+const fileUpload = require('express-fileupload');
 
 const mongooseParams = {
     useNewUrlParser: true,
@@ -37,20 +38,22 @@ db.once('open', function () {
 });
 
 app.use(cors())
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(middleware);
-app.use(express.json());
-app.use("/api/v1", v1);
-app.use("/api/v2", v2);
-/*app.use(function (err, req, res, next) {
+app.use(fileUpload())
+app.use(express.static(path.join(__dirname, 'public')))
+app.use(middleware)
+app.use(express.json())
+app.use("/api/v1", v1)
+app.use("/api/v2", v2)
+app.use(function (err, req, res, next) {
     if (!err) {
         console.log("Unexpected error");
         res.status(500).end()
     } else {
         console.log(err)
-        res.status(500).json({ error: err })
+        res.status(500).json({ error: err.message })
     }
-});*/
+    next(err)
+})
 
 io.on('connection', (socket) => {
     connected(socket.handshake.query.id, socket)

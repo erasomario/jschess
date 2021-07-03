@@ -1,42 +1,67 @@
 const express = require("express");
 const Game = require("../oldmodel/Games");
-const makeUserDto = require("../muuuu/user-dto/user-dto-model");
-const { addUser, recoverPassword, findUserById, findWithUserNameLike } = require("../muuuu/user/user-controller");
+const makeUserDto = require("../model/user-dto/user-dto-model");
+const { addUser, findWithUserNameLike, findUserById, recoverPassword, editUser } = require("../model/user/user-controller");
+const fs = require("fs")
 
 var router = express.Router();
 
-router.post("/", function (req, res) {
-    if (!/^[A-Za-z\d\-_]+$/.test(req.body.username)) {
-        res.status(400).json({ error: "El nombre de usuario debe componerse únicamente de letras, números y guiones." });
-    } if (req.body.password.trim().length < 6) {
-        res.status(400).json({ error: "El password debe tener al menos 6 letras" });
-    } else {
-        addUser(req.body).then(user =>
-            res.status(200).json(user)
-        ).catch(error =>
-            res.status(500).json({ error: error.message })
-        )
-    }
+router.post("/", function (req, res, next) {
+    addUser(req.body).then(user =>
+        res.status(200).json(user)
+    ).catch(next)
 })
 
-router.get("/", (req, res) => {
+router.get("/", (req, res, next) => {
     findWithUserNameLike(req.query.like)
         .then(usrs => usrs.map(u => makeUserDto(u)))
         .then(usrs => res.status(200).json(usrs))
-        //.catch(error => res.status(500).json({ error: error.message }))
-});
+        .catch(next)
+})
 
-router.get("/:id", (req, res) => {
+router.get("/:id", (req, res, next) => {
     findUserById(req.params.id)
         .then(usr => {
             if (!usr) {
                 throw Error('No se encontró el usuario')
             }
-            return makeUserDto(usr)
-        })
-        .then(usr => res.json(usr))
-        .catch(error => res.status(500).json({ error: error.message }))
+            return res.json(makeUserDto(usr))
+        }).catch(next)
 });
+
+const FILES_PATH = 'C:\\PLANOS\\'
+
+router.get("/:id/picture", (req, res) => {
+    const file = fs.readFileSync(FILES_PATH + req.params.id, 'binary')
+    res.setHeader('Content-Length', file.length)
+    res.write(file, 'binary')
+    res.end()
+})
+
+router.put("/:id/picture", (req, res, next) => {
+    const file = req.files[Object.keys(req.files)[0]]
+    if (req.user.id === req.params.id) {
+        findUserById(req.params.id)
+            .then(user => {
+                user.pictureType = file.mimetype
+                return editUser(user)
+            }).then(
+                user => {
+                    const uploadPath = FILES_PATH + user.id
+                    console.log(uploadPath);
+                    file.mv(uploadPath, function (err) {
+                        if (err) {
+                            next(err)
+                        }
+                        res.status(200).end()
+                    })
+                }
+            )
+    } else {
+        res.status(403).end();
+    }
+});
+
 
 router.put("/:id/password", (req, res) => {
     if (req.user.id === req.params.id) {
