@@ -10,7 +10,7 @@ const schema = Joi.object({
     username: Joi.string().required().pattern(new RegExp('^[A-Za-z0-9_-]+$')),
     password: Joi.string().required(),
     createAt: Joi.date(),
-    pictureType: Joi.string(),
+    hasPicture: Joi.boolean(),
     recoveryKey: recoveryKey
 })
 

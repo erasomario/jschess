@@ -2,12 +2,12 @@ const Joi = require('joi');
 
 const schema = Joi.object({
     id: Joi.string().required(),
-    email: Joi.string().email().required(),
-    username: Joi.string().required()
+    username: Joi.string().required(),
+    hasPicture: Joi.boolean(),
 })
 
-const makeUserDto = ({id, email, username}) => {
-    const { value, error } = schema.validate({id, email, username})
+const makeUserDto = ({id, username, hasPicture}) => {
+    const { value, error } = schema.validate({id, username, hasPicture})
     if (error) {
         throw error
     }

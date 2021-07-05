@@ -3,12 +3,12 @@ const {encode} = require('./api-key-controller')
 
 const schema = Joi.object({
     id: Joi.string().required(),
-    email: Joi.string().email().required(),
-    username: Joi.string().required()
+    username: Joi.string().required(),
+    hasPicture: Joi.boolean().required(),
 })
 
-const makeApiKey = ({id, email, username}) => {
-    const { value, error } = schema.validate({id, email, username})
+const makeApiKey = ({id, username, hasPicture}) => {
+    const { value, error } = schema.validate({id, username, hasPicture})
     if (error) {
         throw error
     }

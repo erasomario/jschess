@@ -13,6 +13,7 @@
         "express-fileupload": "^1.2.1",
         "joi": "^17.4.0",
         "mongoose": "^5.12.2",
+        "sharp": "^0.28.3",
         "socket.io": "^4.1.2"
     },
     "devDependencies": {

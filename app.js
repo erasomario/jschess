@@ -50,7 +50,13 @@ app.use(function (err, req, res, next) {
         res.status(500).end()
     } else {
         console.log(err)
-        res.status(500).json({ error: err.message })
+        if (err instanceof Error) {
+            res.status(500).json({ error: err.message })
+        } else if (typeof err === 'string') {
+            res.status(500).json({ error: err })
+        } else {
+            res.status(500)
+        }
     }
     next(err)
 })

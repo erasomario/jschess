@@ -3,6 +3,8 @@ const Game = require("../oldmodel/Games");
 const makeUserDto = require("../model/user-dto/user-dto-model");
 const { addUser, findWithUserNameLike, findUserById, recoverPassword, editUser } = require("../model/user/user-controller");
 const fs = require("fs")
+const sharp = require('sharp');
+const path = require("path");
 
 var router = express.Router();
 
@@ -38,30 +40,49 @@ router.get("/:id/picture", (req, res) => {
     res.end()
 })
 
+router.delete("/:id/picture", (req, res, next) => {
+    if (req.user.id === req.params.id) {
+        fs.unlink(path.join(FILES_PATH, req.user.id), err => {
+            if (err) {
+                next(err)
+            } else {
+                findUserById(req.params.id)
+                    .then(user => {
+                        user.hasPicture = false
+                        return editUser(user)
+                    }).then((user) => {
+                        res.json(user)
+                    }).catch(err => next(err))
+            }
+        })
+    } else {
+        res.status(403).end();
+    }
+})
+
 router.put("/:id/picture", (req, res, next) => {
     const file = req.files[Object.keys(req.files)[0]]
     if (req.user.id === req.params.id) {
         findUserById(req.params.id)
             .then(user => {
-                user.pictureType = file.mimetype
+                user.hasPicture = true
                 return editUser(user)
             }).then(
                 user => {
                     const uploadPath = FILES_PATH + user.id
-                    console.log(uploadPath);
-                    file.mv(uploadPath, function (err) {
-                        if (err) {
-                            next(err)
-                        }
-                        res.status(200).end()
-                    })
+                    return sharp(file.data)
+                        .resize(150, 150, { fit: 'cover' })
+                        .toFile(uploadPath)
+
                 }
-            )
+            ).then(() => {
+                res.status(200).end()
+            }
+            ).catch(next)
     } else {
         res.status(403).end();
     }
 });
-
 
 router.put("/:id/password", (req, res) => {
     if (req.user.id === req.params.id) {

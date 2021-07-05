@@ -19,7 +19,7 @@ const userSchema = Schema({
         }
     },
     createdAt: { type: Date, default: Date.now },
-    pictureType: { type: String },
+    hasPicture: { type: Boolean },
     recoveryKey: {
         key: String,
         createdAt: Date,
@@ -62,7 +62,7 @@ const editUser = (user) => {
             u.password = user.password
             u.createdAt = user.createdAt
             u.recoveryKey = user.recoveryKey
-            u.pictureType = user.pictureType
+            u.hasPicture = user.hasPicture
             return u
         })
         .then(u => u.save())
@@ -98,9 +98,9 @@ const findWithUserNameLike = (like) => {
     }).then(serialize)
 }
 
-const serializeOne = ({ id, email, username, password, createdAt, recoveryKey }) => {
+const serializeOne = ({ id, email, username, password, createdAt, hasPicture, recoveryKey }) => {
     const { key: recKey, createdAt: recCreatedAt } = recoveryKey
-    return { id, email, username, password, createdAt, recoveryKey: { key: recKey, createdAt: recCreatedAt } }
+    return { id, email, username, password, createdAt, hasPicture, recoveryKey: { key: recKey, createdAt: recCreatedAt } }
 }
 
 const serialize = (data) => {
