@@ -1,7 +1,16 @@
 const express = require("express");
 const Game = require("../oldmodel/Games");
 const makeUserDto = require("../model/user-dto/user-dto-model");
-const { addUser, findWithUserNameLike, findUserById, recoverPassword, editUser } = require("../model/user/user-controller");
+const {
+    addUser,
+    findWithUserNameLike,
+    findUserById,
+    recoverPassword,
+    editUser,
+    editUsername,
+    editPassword, 
+    editEmail,
+} = require("../model/user/user-controller");
 const fs = require("fs")
 const sharp = require('sharp');
 const path = require("path");
@@ -84,26 +93,36 @@ router.put("/:id/picture", (req, res, next) => {
     }
 });
 
-router.put("/:id/password", (req, res) => {
+router.put("/:id/username", (req, res, next) => {
     if (req.user.id === req.params.id) {
-        if (req.body.password) {
-            req.user.password = req.body.password;
-            req.user.save().then(() => {
-                res.status(200).end();
-            }).catch((error) => {
-                let msg = '';
-                for (const err in error.errors) {
-                    msg += (' ' + error.errors[err].message);
-                }
-                res.status(400).json({ error: msg });
-            });
-        } else {
-            res.status(400).json({ error: "Debe escribir una contraseña" });
-        }
+        editUsername(req.user.id, req.body.password, req.body.newUsername).then(user => {
+            res.json(makeUserDto(user))
+        }).catch(next)
+    } else {
+        res.status(403).end();
+    }
+})
+
+router.put("/:id/password", (req, res, next) => {
+    if (req.user.id === req.params.id) {
+        editPassword(req.user.id, req.body.password, req.body.newPassword).then(user => {
+            res.json(makeUserDto(user))
+        }).catch(next)
     } else {
         res.status(403).end();
     }
 });
+
+router.put("/:id/email", (req, res, next) => {
+    if (req.user.id === req.params.id) {
+        editEmail(req.user.id, req.body.password, req.body.newEmail).then(user => {
+            res.json(makeUserDto(user))
+        }).catch(next)
+    } else {
+        res.status(403).end();
+    }
+});
+
 
 router.put('/:id/recovered_password', (req, res) => {
     if (!req.body.recoveryKey) {

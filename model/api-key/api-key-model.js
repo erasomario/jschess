@@ -1,4 +1,5 @@
 const Joi = require('joi')
+const { validationOpts } = require('../../utils/ValidationPromise')
 const {encode} = require('./api-key-controller')
 
 const schema = Joi.object({
@@ -8,7 +9,7 @@ const schema = Joi.object({
 })
 
 const makeApiKey = ({id, username, hasPicture}) => {
-    const { value, error } = schema.validate({id, username, hasPicture})
+    const { value, error } = schema.validate({id, username, hasPicture}, validationOpts)
     if (error) {
         throw error
     }

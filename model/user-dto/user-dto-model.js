@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { validationOpts } = require('../../utils/ValidationPromise');
 
 const schema = Joi.object({
     id: Joi.string().required(),
@@ -7,7 +8,7 @@ const schema = Joi.object({
 })
 
 const makeUserDto = ({id, username, hasPicture}) => {
-    const { value, error } = schema.validate({id, username, hasPicture})
+    const { value, error } = schema.validate({id, username, hasPicture}, validationOpts)
     if (error) {
         throw error
     }

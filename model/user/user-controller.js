@@ -3,21 +3,20 @@ const { hash, compare } = require('../../utils/Crypt')
 const { validationPromise } = require('../../utils/ValidationPromise')
 const makeApiKey = require('../api-key/api-key-model')
 const makeUserDto = require('../user-dto/user-dto-model')
+const makeUser = require('./user-model')
 const userSrc = require('./user-mongoose')
 
-const login = (login, password) => {
-    return validationPromise(Joi.object({
+const login = async (login, password) => {
+    await validationPromise(Joi.object({
         login: Joi.string().required().label('usuario o email'),
         password: Joi.string().required().label('contraseña')
     }), { login, password })
-        .then(() => userSrc.findByLogin(login))
-        .then(u => {
-            if (compare(password, u.password)) {
-                return makeApiKey(makeUserDto(u))
-            } else {
-                throw Error('Contraseña incorrecta')
-            }
-        })
+    const u = await userSrc.findByLogin(login)
+    if (compare(password, u.password)) {
+        return makeApiKey(makeUserDto(u))
+    } else {
+        throw Error('Contraseña incorrecta')
+    }
 }
 
 const createRecoveryPass = (login) => {
@@ -47,8 +46,75 @@ const recoverPassword = (userId, recoveryKey, newPass) => {
             throw Error('El código expiró, debe generar uno nuevo')
         }
         usr.password = hash(newPass)
-        return userSrc.editUser(usr)
+        return userSrc.editUser(makeUser(user))
     })
 }
 
-module.exports = { ...userSrc, login, createRecoveryPass, recoverPassword }
+const editUsername = async (id, password, newUsername) => {
+    if (!newUsername) {
+        throw Error('Debe indicar un nuevo nombre de usuario')
+    } else if (!password) {
+        throw Error('Debe indicar su contraseña actual')
+    }
+    const user = await userSrc.findUserById(id)
+    if (!compare(password, user.password)) {
+        throw Error('La constraseña es incorrecta')
+    }
+    if (user.username === newUsername) {
+        throw Error('El nombre es igual al anterior')
+    }
+    const usrs = await userSrc.findUsersByAttr('username', newUsername)
+    if (usrs.length > 0) {
+        throw Error('Ya existe otro usuario con ese nombre')
+    }
+    user.username = newUsername
+    return userSrc.editUser(makeUser(user))
+}
+
+const editPassword = async (id, password, newPassword) => {
+    if (!newPassword) {
+        throw Error('Debe indicar una nueva contraseña')
+    } else if (!password) {
+        throw Error('Debe indicar su contraseña actual')
+    }
+    const user = await userSrc.findUserById(id)
+    if (!compare(password, user.password)) {
+        throw Error('La constraseña es incorrecta')
+    }
+    if (user.password === newPassword) {
+        throw Error('La contraseña es igual a la anterior')
+    }
+    user.password = hash(newPassword)
+    return userSrc.editUser(makeUser(user))
+}
+
+const editEmail = async (id, password, newEmail) => {
+    if (!newEmail) {
+        throw Error('Debe indicar un nuevo email')
+    } else if (!password) {
+        throw Error('Debe indicar su contraseña actual')
+    }
+    const user = await userSrc.findUserById(id)
+    if (!compare(password, user.password)) {
+        throw Error('La constraseña es incorrecta')
+    }
+    if (user.email === newEmail) {
+        throw Error('El email es igual al anterior')
+    }
+    const usrs = await userSrc.findUsersByAttr('email', newEmail)
+    if (usrs.length > 0) {
+        throw Error('Ya existe otro usuario con ese email')
+    }
+    user.email = newEmail
+    return userSrc.editUser(makeUser(user))
+}
+
+module.exports = {
+    ...userSrc,
+    login,
+    createRecoveryPass,
+    recoverPassword,
+    editUsername,
+    editPassword,
+    editEmail
+}
