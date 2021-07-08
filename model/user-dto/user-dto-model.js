@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { validationOpts } = require('../../utils/ValidationPromise');
+const { validate } = require('../../utils/Validation');
 
 const schema = Joi.object({
     id: Joi.string().required(),
@@ -7,12 +7,8 @@ const schema = Joi.object({
     hasPicture: Joi.boolean(),
 })
 
-const makeUserDto = ({id, username, hasPicture}) => {
-    const { value, error } = schema.validate({id, username, hasPicture}, validationOpts)
-    if (error) {
-        throw error
-    }
-    return value
+const makeUserDto = ({ id, username, hasPicture }) => {
+    return validate(schema, { id, username, hasPicture })
 }
 
 module.exports = makeUserDto

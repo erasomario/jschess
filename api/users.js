@@ -8,18 +8,19 @@ const {
     recoverPassword,
     editUser,
     editUsername,
-    editPassword, 
+    editPassword,
     editEmail,
 } = require("../model/user/user-controller");
 const fs = require("fs")
 const sharp = require('sharp');
 const path = require("path");
+const makeApiKey = require("../model/api-key/api-key-model");
 
 var router = express.Router();
 
 router.post("/", function (req, res, next) {
     addUser(req.body).then(user =>
-        res.status(200).json(user)
+        res.status(200).json(makeApiKey(makeUserDto(user)))
     ).catch(next)
 })
 
@@ -113,6 +114,12 @@ router.put("/:id/password", (req, res, next) => {
     }
 });
 
+router.post('/:id/password/recovery', (req, res, next) => {
+    recoverPassword(req.params.id, req.body.recoveryKey, req.body.password)
+        .then(res.status(200).end())
+        .catch(next)
+});
+
 router.put("/:id/email", (req, res, next) => {
     if (req.user.id === req.params.id) {
         editEmail(req.user.id, req.body.password, req.body.newEmail).then(user => {
@@ -120,19 +127,6 @@ router.put("/:id/email", (req, res, next) => {
         }).catch(next)
     } else {
         res.status(403).end();
-    }
-});
-
-
-router.put('/:id/recovered_password', (req, res) => {
-    if (!req.body.recoveryKey) {
-        res.status(400).json({ error: "Debe escribir un código" });
-    } if (!req.body.password) {
-        res.status(400).json({ error: "Debe escribir una nueva contraseña" });
-    } else {
-        recoverPassword(req.params.id, req.body.recoveryKey, req.body.password)
-            .then(res.status(200).end())
-            .catch(error => res.status(500).end(error))
     }
 });
 

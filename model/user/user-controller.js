@@ -1,13 +1,30 @@
 const Joi = require('joi')
 const { hash, compare } = require('../../utils/Crypt')
-const { validationPromise } = require('../../utils/ValidationPromise')
+const { validate } = require('../../utils/Validation')
 const makeApiKey = require('../api-key/api-key-model')
 const makeUserDto = require('../user-dto/user-dto-model')
 const makeUser = require('./user-model')
 const userSrc = require('./user-mongoose')
 
+const addUser = async (raw) => {
+    const usr = makeUser(raw)
+    const lstName = await userSrc.findUsersByAttr('username', usr.username);
+    if (lstName.length > 0) {
+        throw Error('Ya existe un usuario con ese nombre')
+    }
+
+    const lstEmail = await userSrc.findUsersByAttr('email', usr.email)
+    if (lstEmail.length > 0) {
+        throw Error('Ya existe un usuario con ese mail')
+    }
+    usr.password = hash(usr.password)
+    usr.hasPicture = false
+    const savedUsr = await userSrc.saveUser(usr)
+    return savedUsr
+}
+
 const login = async (login, password) => {
-    await validationPromise(Joi.object({
+    validate(Joi.object({
         login: Joi.string().required().label('usuario o email'),
         password: Joi.string().required().label('contraseña')
     }), { login, password })
@@ -19,35 +36,16 @@ const login = async (login, password) => {
     }
 }
 
-const createRecoveryPass = (login) => {
+const createRecoveryPass = async (login) => {
     const keyLenght = 7;
-    return userSrc.findByLogin(login)
-        .then(u => {
-            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-            const key = ([...Array(keyLenght)]).reduce((t) => t + letters[parseInt(Math.random() * letters.length)], '')
-            u.recoveryKey = { key: key, createdAt: Date.now() }
-            return userSrc.editUser(u)
-        }).then(sUsr => {
-            const obscure = (str) => [...str].reduce((t, a, i, arr) => t + (i >= parseInt(arr.length * 0.3) && i <= parseInt(arr.length * 0.6) ? '*' : a), '')
-            let parts = sUsr.email.split('@')
-            return { id: sUsr.id, mail: `${obscure(parts[0])}@${obscure(parts[1])}`, keyLenght }
-        })
-}
-
-const recoverPassword = (userId, recoveryKey, newPass) => {
-    userSrc.findUserById(userId).then(usr => {
-        if (!usr.recoveryKey) {
-            throw Error('No es ha iniciado el proceso')
-        }
-        if (usr.recoveryKey.key !== recoveryKey) {
-            throw Error('El código no coincide')
-        }
-        if (((new Date() - usr.recoveryKey.createdAt) / 1000 / 60) > 30) {
-            throw Error('El código expiró, debe generar uno nuevo')
-        }
-        usr.password = hash(newPass)
-        return userSrc.editUser(makeUser(user))
-    })
+    const u = await userSrc.findByLogin(login)
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    const key = ([...Array(keyLenght)]).reduce((t) => t + letters[parseInt(Math.random() * letters.length)], '')
+    u.recoveryKey = { key: key, createdAt: Date.now() }
+    const sUsr = await userSrc.editUser(u)
+    const obscure = (str_1) => [...str_1].reduce((t_1, a, i, arr) => t_1 + (i >= parseInt(arr.length * 0.3) && i <= parseInt(arr.length * 0.6) ? '*' : a), '')
+    let parts = sUsr.email.split('@')
+    return { id: sUsr.id, mail: `${obscure(parts[0])}@${obscure(parts[1])}`, keyLenght }
 }
 
 const editUsername = async (id, password, newUsername) => {
@@ -71,6 +69,29 @@ const editUsername = async (id, password, newUsername) => {
     return userSrc.editUser(makeUser(user))
 }
 
+const recoverPassword = async (userId, recoveryKey, newPass) => {
+    validate(Joi.object({
+        userId: Joi.string().label('id del usuario').required(),
+        recoveryKey: Joi.string().label('clave de recuperación').required(),
+        newPass: Joi.string().label('nueva contraseña').required()
+    }), { userId, recoveryKey, newPass })
+
+    const usr = await userSrc.findUserById(userId)
+    if (!usr.recoveryKey) {
+        throw Error('No es ha iniciado el proceso')
+    }
+    if (usr.recoveryKey.key !== recoveryKey) {
+        throw Error('El código no coincide')
+    }
+    if (((new Date() - usr.recoveryKey.createdAt) / 1000 / 60) > 30) {
+        throw Error('El código expiró, debe generar uno nuevo')
+    }
+    usr.password = newPass
+    makeUser(usr)
+    usr.password = hash(newPass)
+    return userSrc.editUser(usr)
+}
+
 const editPassword = async (id, password, newPassword) => {
     if (!newPassword) {
         throw Error('Debe indicar una nueva contraseña')
@@ -84,8 +105,10 @@ const editPassword = async (id, password, newPassword) => {
     if (user.password === newPassword) {
         throw Error('La contraseña es igual a la anterior')
     }
-    user.password = hash(newPassword)
-    return userSrc.editUser(makeUser(user))
+    user.password = newPassword
+    makeUser(user)
+    user.password = hash(user.password)
+    return userSrc.editUser(user)
 }
 
 const editEmail = async (id, password, newEmail) => {
@@ -109,12 +132,22 @@ const editEmail = async (id, password, newEmail) => {
     return userSrc.editUser(makeUser(user))
 }
 
+const findUserById = (id) => {
+    return userSrc.findUserById(id)
+}
+
+const editUser = (usr) => {
+    return userSrc.editUser(usr)
+}
+
 module.exports = {
-    ...userSrc,
     login,
     createRecoveryPass,
     recoverPassword,
+    addUser,
+    editUser,
     editUsername,
     editPassword,
-    editEmail
+    editEmail,
+    findUserById
 }

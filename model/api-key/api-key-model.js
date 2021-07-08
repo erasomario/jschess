@@ -1,6 +1,6 @@
 const Joi = require('joi')
-const { validationOpts } = require('../../utils/ValidationPromise')
-const {encode} = require('./api-key-controller')
+const { validate } = require('../../utils/Validation')
+const { encode } = require('./api-key-controller')
 
 const schema = Joi.object({
     id: Joi.string().required(),
@@ -8,11 +8,8 @@ const schema = Joi.object({
     hasPicture: Joi.boolean().required(),
 })
 
-const makeApiKey = ({id, username, hasPicture}) => {
-    const { value, error } = schema.validate({id, username, hasPicture}, validationOpts)
-    if (error) {
-        throw error
-    }
+const makeApiKey = ({ id, username, hasPicture }) => {
+    const value = validate(schema, { id, username, hasPicture })
     return { api_key: encode(value), ...value }
 }
 

@@ -1,8 +1,4 @@
-const makeUser = require('./user-model')
 const mongoose = require("mongoose");
-const { hash } = require('../../utils/Crypt');
-const makeUserDto = require('../user-dto/user-dto-model');
-const makeApiKey = require('../api-key/api-key-model');
 const { Schema } = mongoose;
 
 const userSchema = Schema({
@@ -28,27 +24,9 @@ const userSchema = Schema({
 
 const User = mongoose.model("User", userSchema);
 
-const addUser = (raw) => {
-    return new Promise((res, rej) => {
-        const usr = new User(makeUser(raw))
-        findUsersByAttr('username', usr.username)
-            .then(lst => {
-                if (lst.length > 0) {
-                    throw Error('Ya existe un usuario con ese nombre')
-                }
-                return findUsersByAttr('email', usr.email)
-            }).then(lst => {
-                if (lst.length > 0) {
-                    throw Error('Ya existe un usuario con ese mail')
-                }
-                usr.password = hash(usr.password)
-                return usr.save()
-            })
-            .then(sUsr => makeApiKey(makeUserDto(sUsr)))
-            .then(res)
-            .catch(rej)
-    })
-
+const saveUser = (usr) => {
+    const mUsr = new User(usr)
+    return mUsr.save()
 }
 
 const editUser = (user) => {
@@ -69,8 +47,9 @@ const editUser = (user) => {
         .then(su => serializeOne(su))
 }
 
-const findUserById = (id) => {
-    return User.findById(id).then(serializeOne)
+const findUserById = async (id) => {
+    const result = await User.findById(id);
+    return serializeOne(result);
 }
 
 const findUsersByAttr = (attr, value) => {
@@ -79,13 +58,12 @@ const findUsersByAttr = (attr, value) => {
     return User.find(query).then(serialize);
 }
 
-const findByLogin = (login) => {
-    return User.find().or([{ username: login }, { email: login }]).findOne().then(u => {
-        if (!u) {
-            throw Error('Nombre de usuario o email incorrectos')
-        }
-        return serialize(u)
-    })
+const findByLogin = async (login) => {
+    const u = await User.find().or([{ username: login }, { email: login }]).findOne();
+    if (!u) {
+        throw Error('Nombre de usuario o email incorrectos');
+    }
+    return serialize(u);
 }
 
 const findWithUserNameLike = (like) => {
@@ -100,7 +78,11 @@ const findWithUserNameLike = (like) => {
 
 const serializeOne = ({ id, email, username, password, createdAt, hasPicture, recoveryKey }) => {
     const { key: recKey, createdAt: recCreatedAt } = recoveryKey
-    return { id, email, username, password, createdAt, hasPicture, recoveryKey: { key: recKey, createdAt: recCreatedAt } }
+    const obj = { id, email, username, password, createdAt, hasPicture, recoveryKey: { key: recKey, createdAt: recCreatedAt } }
+    if (!recKey) {
+        delete obj.recoveryKey
+    }
+    return obj
 }
 
 const serialize = (data) => {
@@ -113,4 +95,11 @@ const serialize = (data) => {
     return serializeOne(data)
 }
 
-module.exports = { addUser, editUser, findUserById, findUsersByAttr, findByLogin, findWithUserNameLike }
+module.exports = { 
+    saveUser, 
+    editUser, 
+    findUserById, 
+    findUsersByAttr, 
+    findByLogin, 
+    findWithUserNameLike
+ }

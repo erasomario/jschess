@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { validationOpts } = require('../../utils/ValidationPromise');
+const { validate } = require('../../utils/Validation');
 
 var recoveryKey = Joi.object({
     key: Joi.string(),
@@ -7,21 +7,17 @@ var recoveryKey = Joi.object({
 });
 
 const schema = Joi.object({
-    id: Joi.string().required(),
-    email: Joi.string().email().required(),
-    username: Joi.string().required().pattern(new RegExp('^[A-Za-z0-9_-]+$')),
-    password: Joi.string().required(),
+    id: Joi.string(),
+    email: Joi.string().label('email').email().required().trim().max(254),
+    username: Joi.string().label('nombre de usuario').required().alphanum().trim().max(18).min(6),
+    password: Joi.string().label('contraseña').required().max(72).min(6),
     createdAt: Joi.date(),
     hasPicture: Joi.boolean(),
     recoveryKey: recoveryKey
 })
 
 const makeUser = (obj) => {
-    const { value, error } = schema.validate(obj, validationOpts)
-    if (error) {
-        throw error
-    }
-    return value
+    return validate(schema, obj)
 }
 
 module.exports = makeUser

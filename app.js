@@ -49,7 +49,7 @@ app.use(function (err, req, res, next) {
         console.log("Unexpected error");
         res.status(500).end()
     } else {
-        console.log(err)
+        console.error(err)
         if (err instanceof Error) {
             res.status(500).json({ error: err.message })
         } else if (typeof err === 'string') {
