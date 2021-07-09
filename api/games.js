@@ -1,5 +1,4 @@
 const express = require("express")
-const Game = require("../oldmodel/Games")
 const { getBoard, getAttacked, getCastling, includes, getAllAttackedByMe, isKingAttacked } = require('../utils/Chess')
 const { send } = require('../utils/Sockets');
 var router = express.Router();
