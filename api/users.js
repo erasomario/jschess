@@ -1,5 +1,4 @@
 const express = require("express");
-const Game = require("../oldmodel/Games");
 const makeUserDto = require("../model/user-dto/user-dto-model");
 const {
     addUser,
@@ -15,6 +14,7 @@ const fs = require("fs")
 const sharp = require('sharp');
 const path = require("path");
 const makeApiKey = require("../model/api-key/api-key-model");
+const { findGamesByPlayer } = require("../model/game/game-mongoose");
 
 var router = express.Router();
 
@@ -24,10 +24,10 @@ router.post("/", function (req, res, next) {
     ).catch(next)
 })
 
-router.get("/", (req, res, next) => {
-    findWithUserNameLike(req.query.like)
+router.get("/like/:like", (req, res, next) => {
+    findWithUserNameLike(req.params.like)
         .then(usrs => usrs.map(u => makeUserDto(u)))
-        .then(usrs => res.status(200).json(usrs))
+        .then(usrs => res.json(usrs))
         .catch(next)
 })
 
@@ -50,7 +50,7 @@ router.get("/:id/picture", (req, res) => {
     res.end()
 })
 
-router.delete("/:id/picture", (req, res, next) => {
+router.delete("/:id/picture", async (req, res, next) => {
     if (req.user.id === req.params.id) {
         fs.unlink(path.join(FILES_PATH, req.user.id), err => {
             if (err) {
@@ -70,29 +70,24 @@ router.delete("/:id/picture", (req, res, next) => {
     }
 })
 
-router.put("/:id/picture", (req, res, next) => {
-    const file = req.files[Object.keys(req.files)[0]]
-    if (req.user.id === req.params.id) {
-        findUserById(req.params.id)
-            .then(user => {
-                user.hasPicture = true
-                return editUser(user)
-            }).then(
-                user => {
-                    const uploadPath = FILES_PATH + user.id
-                    return sharp(file.data)
-                        .resize(150, 150, { fit: 'cover' })
-                        .toFile(uploadPath)
-
-                }
-            ).then(() => {
-                res.status(200).end()
-            }
-            ).catch(next)
-    } else {
-        res.status(403).end();
+router.put("/:id/picture", async (req, res, next) => {
+    try {
+        const file = req.files[Object.keys(req.files)[0]]
+        if (req.user.id === req.params.id) {
+            const user = await findUserById(req.params.id)
+            user.hasPicture = true
+            await editUser(user)
+            await sharp(file.data)
+                .resize(150, 150, { fit: 'cover' })
+                .toFile(FILES_PATH + user.id)
+            res.status(200).end()
+        } else {
+            res.status(403).end()
+        }
+    } catch (e) {
+        next(e)
     }
-});
+})
 
 router.put("/:id/username", (req, res, next) => {
     if (req.user.id === req.params.id) {
@@ -126,36 +121,17 @@ router.put("/:id/email", (req, res, next) => {
             res.json(makeUserDto(user))
         }).catch(next)
     } else {
+        res.status(403).end()
+    }
+})
+
+router.get("/:id/games/:status", (req, res, next) => {
+    if (req.params.id !== req.user.id) {
         res.status(403).end();
     }
-});
+    findGamesByPlayer(req.params.id, req.params.status)
+        .then(data => { res.json(data) })
+        .catch(next)
+})
 
-router.get("/:id/games/:status", (req, res) => {
-    if (req.params.id !== req.user.id) {
-        res.status(500).end();
-    }
-    Game.find()
-        .or([{ whiteId: req.user.id }, { blackId: req.user.id }])
-        .exists('result', req.params.status !== 'open')
-        .sort({ createdAt: 'desc' })
-        .populate('whiteId')
-        .populate('blackId')
-        .exec((error, data) => {
-            if (error) {
-                res.status(500).json(error)
-            } else {
-                const m = data.map(g => {
-                    let opponent
-                    if (g.whiteId.id === req.user.id) {
-                        opponent = g.blackId.username
-                    } else {
-                        opponent = g.whiteId.username
-                    }
-                    return { id: g.id, opponent, whiteId: g.whiteId.id, blackId: g.blackId.id, turn: g.turn }
-                })
-                res.status(200).json(m)
-            }
-        });
-});
-
-module.exports = router;
+module.exports = router

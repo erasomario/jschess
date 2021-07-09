@@ -140,6 +140,8 @@ const editUser = (usr) => {
     return userSrc.editUser(usr)
 }
 
+const findWithUserNameLike = userSrc.findWithUserNameLike
+
 module.exports = {
     login,
     createRecoveryPass,
@@ -149,5 +151,6 @@ module.exports = {
     editUsername,
     editPassword,
     editEmail,
-    findUserById
+    findUserById,
+    findWithUserNameLike
 }

@@ -66,14 +66,11 @@ const findByLogin = async (login) => {
     return serialize(u);
 }
 
-const findWithUserNameLike = (like) => {
-    return new Promise((res, rej) => {
-        if (like.length < 3) {
-            rej(Error('Debe escribir al menos 3 letras'))
-        } else {
-            res(User.find({ username: new RegExp(like, "i") }))
-        }
-    }).then(serialize)
+const findWithUserNameLike = async (like) => {
+    if (like.length < 3) {
+        throw Error('Debe escribir al menos 3 letras');
+    }
+    return serialize(await User.find({ username: new RegExp(like, "i") }))
 }
 
 const serializeOne = ({ id, email, username, password, createdAt, hasPicture, recoveryKey }) => {
@@ -95,11 +92,11 @@ const serialize = (data) => {
     return serializeOne(data)
 }
 
-module.exports = { 
-    saveUser, 
-    editUser, 
-    findUserById, 
-    findUsersByAttr, 
-    findByLogin, 
+module.exports = {
+    saveUser,
+    editUser,
+    findUserById,
+    findUsersByAttr,
+    findByLogin,
     findWithUserNameLike
- }
+}
