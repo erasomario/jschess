@@ -1,54 +1,19 @@
-const express = require("express")
+const express = require("express");
+const { createGame } = require("../model/game/game-controller");
+const { findGameById } = require("../model/game/game-mongoose");
 const { getBoard, getAttacked, getCastling, includes, getAllAttackedByMe, isKingAttacked } = require('../utils/Chess')
 const { send } = require('../utils/Sockets');
 var router = express.Router();
 
-router.post("/", function (req, res) {
-    const game = new Game()
-    
-    if (!req.body.color) {
-        throw { error: 'Request should specify a color' }
-    }
-    if (['w', 'b', 'wb'].includes(req.body.color)) {
-        throw { error: 'Color shoud be w b or wb' }
-    }
-    if (req.body.time) {
-        throw { error: 'Request should include a time' }
-    }
-
-    if (req.body.color === 'w' || (req.body.color === 'wb' && Math.random() <= 0.5)) {
-        game.whiteId = req.user.id;//me
-        game.blackId = req.body.userId;//choosen opponent
-        game.createdBy = 'w';
-    } else {
-        game.whiteId = req.body.userId;//choosen opponent
-        game.blackId = req.user.id;//me
-        game.createdBy = 'b';
-    }
-
-    game.movs = []
-    game.save((error, game) => {
-        if (error) {
-            console.log(error);
-            res.status(500).end()
-        } else {
-            res.status(200).json(game)
-        }
-    })
+router.post("/", function (req, res, next) {
+    createGame(req.user.id, req.body).then(game => res.json(game)).catch(next)
 });
 
-router.get("/:id", (req, res) => {
-    Game.findById(req.params.id)
-        .populate('whiteId')
-        .populate('blackId')
-        .exec((error, data) => {
-            if (error) {
-                res.status(500).json(error)
-            } else if (data) {
-                res.status(200).json(Game.dto(data))
-            }
-        });
-});
+router.get("/:id", (req, res, next) => {
+    findGameById(req.params.id)
+        .then(g => res.json(g))
+        .catch(next)
+})
 
 router.post("/:id/moves", (req, res) => {
     Game.findById(req.params.id)
@@ -62,7 +27,6 @@ router.post("/:id/moves", (req, res) => {
                     res.status(400).json({ error: "No se encontró el juego" });
                 } else {
                     const myColor = req.user.id === game.whiteId.id ? 'w' : 'b'
-                    console.log(myColor);
                     const myTurn = myColor === 'w' ? game.movs.length % 2 === 0 : game.movs.length % 2 !== 0
                     const src = req.body.src
                     const dest = req.body.dest
@@ -139,7 +103,6 @@ router.post("/:id/moves", (req, res) => {
 
                     game.save((error, savedGame) => {
                         if (error) {
-                            console.log(error);
                             res.status(500).end();
                         } else {
                             res.status(200).json(Game.dto(savedGame))
@@ -154,8 +117,6 @@ router.post("/:id/moves", (req, res) => {
                     })
                 }
             } catch (e) {
-                console.log('something went wrong');
-                console.log(e)
                 if (e && (typeof e === 'object')) {
                     res.status(500).json(e)
                 } else {

@@ -18,7 +18,7 @@ const gameSchema = Schema({
     blackId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
     createdBy: { type: String, enum: ['w', 'b'], required: true },
     createdAt: { type: Date, default: Date.now, required: true },
-    lastMovAt: { type: Date, default: Date.now, required: false },
+    lastMovAt: { type: Date, required: false },
     result: { type: String, enum: ['w', 'b', 'd'], required: false },
     movs: [movSchema],
     time: { type: Number },
@@ -27,12 +27,41 @@ const gameSchema = Schema({
 
 const Game = mongoose.model("Game", gameSchema);
 
-const saveGame = (usr) => {
-    const mUsr = new Game(usr)
-    return mUsr.save()
+
+const serializeOne = (raw) => {
+    const obj = {
+        id: raw.id,
+        whiteId: raw.whiteId.toString(),
+        blackId: raw.blackId.toString(),
+        createdBy: raw.createdBy,
+        createdAt: raw.createdAt,
+        lastMovAt: raw.lastMovAt,
+        result: raw.result,
+        movs: raw.movs.map(m => {
+            return {
+                id: m.id,
+                sCol: m.sCol,
+                sRow: m.sRow,
+                dCol: m.dCol,
+                dRow: m.dRow,
+                cast: m.cast,
+                prom: m.prom,
+                label: m.label,
+                time: m.time
+            }
+        }),
+        time: raw.time,
+        addition: raw.addition,
+    }
+    return makeGame(obj)
 }
 
-const editGame = (game) => {
+const saveGame = (game) => {
+    const mGame = new Game(makeGame(game))
+    return mGame.save()
+}
+
+/*const editGame = (game) => {
     return Game.findById(game.id)
         .then(u => {
             if (!u) {
@@ -48,44 +77,20 @@ const editGame = (game) => {
         })
         .then(u => u.save())
         .then(su => serializeOne(su))
-}
+}*/
 
 const findGameById = async (id) => {
-    const result = await Game.findById(id);
-    return serializeOne(result);
+    return serializeOne(await Game.findById(id))
 }
 
-const findGamesByAttr = (attr, value) => {
+/*const findGamesByAttr = (attr, value) => {
     const query = {}
     query[attr] = value
     return Game.find(query).then(serialize);
-}
-
-const findGamesByPlayer = (id, status) => {
-    return Game.find()
-        .or([{ whiteId: id }, { blackId: id }])
-        .exists('result', status !== 'open')
-        .sort({ createdAt: 'desc' })
-        .populate('whiteId')
-        .populate('blackId').then(data => {
-            return data.map(g => {
-                let opponent
-                if (g.whiteId.id === id) {
-                    opponent = g.blackId.username
-                } else {
-                    opponent = g.whiteId.username
-                }
-                return { id: g.id, opponent, whiteId: g.whiteId.id, blackId: g.blackId.id, turn: g.turn }
-            })
-        })            
-}
+}*/
 
 
-const serializeOne = (obj) => {
-    return makeGame(obj)
-}
-
-const serialize = (data) => {
+/*const serialize = (data) => {
     if (!data) {
         return null
     }
@@ -93,12 +98,12 @@ const serialize = (data) => {
         return data.map(serializeOne)
     }
     return serializeOne(data)
-}
+}*/
 
 module.exports = {
     saveGame,
-    editGame,
+    //editGame,
     findGameById,
-    findGamesByAttr,
-    findGamesByPlayer
+    //findGamesByAttr,
+    Game
 }

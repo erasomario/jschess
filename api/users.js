@@ -10,11 +10,15 @@ const {
     editPassword,
     editEmail,
 } = require("../model/user/user-controller");
+
+const {
+    findGamesByStatus
+} = require("../model/game-dto/game-dto-controller")
+
 const fs = require("fs")
 const sharp = require('sharp');
 const path = require("path");
 const makeApiKey = require("../model/api-key/api-key-model");
-const { findGamesByPlayer } = require("../model/game/game-mongoose");
 
 var router = express.Router();
 
@@ -129,7 +133,7 @@ router.get("/:id/games/:status", (req, res, next) => {
     if (req.params.id !== req.user.id) {
         res.status(403).end();
     }
-    findGamesByPlayer(req.params.id, req.params.status)
+    findGamesByStatus(req.params.id, req.params.status)
         .then(data => { res.json(data) })
         .catch(next)
 })
