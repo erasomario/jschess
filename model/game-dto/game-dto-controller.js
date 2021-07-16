@@ -1,7 +1,7 @@
 const gameSrc = require('../game-dto/game-dto-mongoose')
 
-const findGamesByStatus = gameSrc.findGamesByStatus
+const findGameDtoByStatus = gameSrc.findGameDtoByStatus
 
 module.exports = {
-    findGamesByStatus
+    findGameDtoByStatus
 }

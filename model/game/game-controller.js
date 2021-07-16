@@ -15,7 +15,7 @@ const createGame = async (userId, raw) => {
         time: obj.time,
         addition: obj.addition
     }
-   
+
     if (obj.color === 'w' || (obj.color === 'wb' && Math.random() <= 0.5)) {
         game.whiteId = userId;//me
         game.blackId = obj.opponentId;//choosen opponent
@@ -29,4 +29,9 @@ const createGame = async (userId, raw) => {
     return gameSrc.saveGame(game)
 }
 
-module.exports = { createGame }
+const findGameById = gameSrc.findGameById
+
+module.exports = {
+    createGame,
+    findGameById
+}

@@ -12,7 +12,7 @@ const {
 } = require("../model/user/user-controller");
 
 const {
-    findGamesByStatus
+    findGameDtoByStatus
 } = require("../model/game-dto/game-dto-controller")
 
 const fs = require("fs")
@@ -133,7 +133,7 @@ router.get("/:id/games/:status", (req, res, next) => {
     if (req.params.id !== req.user.id) {
         res.status(403).end();
     }
-    findGamesByStatus(req.params.id, req.params.status)
+    findGameDtoByStatus(req.params.id, req.params.status)
         .then(data => { res.json(data) })
         .catch(next)
 })

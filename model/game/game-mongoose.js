@@ -27,8 +27,32 @@ const gameSchema = Schema({
 
 const Game = mongoose.model("Game", gameSchema);
 
+const plainToMongoose = (mongo, plain) => {
+    mongo.id = plain.id
+    mongo.whiteId = plain.whiteId
+    mongo.blackId = plain.blackId
+    mongo.createdBy = plain.createdBy
+    mongo.createdAt = plain.createdAt
+    mongo.lastMovAt = plain.lastMovAt
+    mongo.result = plain.result
+    mongo.movs = plain.movs.map(m => {
+        return {
+            id: m.id,
+            sCol: m.sCol,
+            sRow: m.sRow,
+            dCol: m.dCol,
+            dRow: m.dRow,
+            cast: m.cast,
+            prom: m.prom,
+            label: m.label,
+            time: m.time
+        }
+    })
+    mongo.time = plain.time
+    mongo.addition = plain.addition
+}
 
-const serializeOne = (raw) => {
+const mongooseToPlain = (raw) => {
     const obj = {
         id: raw.id,
         whiteId: raw.whiteId.toString(),
@@ -57,53 +81,22 @@ const serializeOne = (raw) => {
 }
 
 const saveGame = (game) => {
-    const mGame = new Game(makeGame(game))
-    return mGame.save()
+    return new Game(makeGame(game)).save()
 }
 
-/*const editGame = (game) => {
-    return Game.findById(game.id)
-        .then(u => {
-            if (!u) {
-                throw Error('No se encontró el usuario')
-            }
-            u.email = game.email
-            u.username = game.username
-            u.password = game.password
-            u.createdAt = game.createdAt
-            u.recoveryKey = game.recoveryKey
-            u.hasPicture = game.hasPicture
-            return u
-        })
-        .then(u => u.save())
-        .then(su => serializeOne(su))
-}*/
+const editGame = async (game) => {
+    const mGame = await Game.findById(game.id)
+    plainToMongoose(mGame, game)
+    return mongooseToPlain(await mGame.save())
+}
 
 const findGameById = async (id) => {
-    return serializeOne(await Game.findById(id))
+    return mongooseToPlain(await Game.findById(id))
 }
-
-/*const findGamesByAttr = (attr, value) => {
-    const query = {}
-    query[attr] = value
-    return Game.find(query).then(serialize);
-}*/
-
-
-/*const serialize = (data) => {
-    if (!data) {
-        return null
-    }
-    if (Array.isArray(data)) {
-        return data.map(serializeOne)
-    }
-    return serializeOne(data)
-}*/
 
 module.exports = {
     saveGame,
-    //editGame,
+    editGame,
     findGameById,
-    //findGamesByAttr,
     Game
 }

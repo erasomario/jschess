@@ -16,6 +16,9 @@ const disconnected = (id, socket) => {
 
 const send = (ids, event, payload) => {
     ids.forEach(id => {
+        if (!id) {
+            throw Error("Dest Id should not be null")
+        }
         if (connections.has(id)) {
             connections.get(id).forEach(c => {
                 c.emit(event, payload)
