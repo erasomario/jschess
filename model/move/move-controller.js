@@ -1,13 +1,14 @@
 const { getBoard, getCastling, includes, getAttacked, isKingAttacked, getAllAttackedByMe } = require("../../utils/Chess")
-const { findGamesDtoById } = require("../game-dto/game-dto-mongoose")
+const { findGamelistDtoById } = require("../gamelist-dto/gamelist-dto-mongoose")
 const { findGameById } = require("../game/game-controller")
 const { editGame } = require("../game/game-mongoose")
 const { send } = require("../../utils/Sockets")
+const makeGameDto = require("../game-dto/game-dto-model")
 
 const createMove = async (gameId, playerId, src, dest, piece, prom, cast) => {
 
     const game = await findGameById(gameId)
-    const dto = await findGamesDtoById(gameId)
+    const dto = await findGamelistDtoById(gameId)
 
     const myColor = playerId === game.whiteId ? 'w' : 'b'
     const myTurn = myColor === 'w' ? game.movs.length % 2 === 0 : game.movs.length % 2 !== 0
@@ -75,15 +76,12 @@ const createMove = async (gameId, playerId, src, dest, piece, prom, cast) => {
     }
 
     setLabel(game.movs[game.movs.length - 1], tiles, kingAttacked, possibleMoves)
-    console.log(game.movs[game.movs.length - 1].label);
     const savedGame = await editGame(game)
+    let msg = `${myColor === 'b' ? dto.blackName : dto.whiteName} hizo una jugada`
     if (game.result) {
         //notify both that the game is over
-    } else {
-        let msg = `${myColor === 'b' ? dto.blackName : dto.whiteName} hizo una jugada`
-        console.log(`Notifing ${myColor === 'b' ? 'white' : 'black'} player`);
-        send([myColor === 'b' ? game.whiteId : game.blackId], 'gameTurnChanged', { id: game.id, msg })
-    }
+    }    
+    send([game.whiteId, game.blackId], 'gameTurnChanged', { game: await makeGameDto(savedGame), msg })
     return savedGame
 }
 
