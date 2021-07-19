@@ -12,8 +12,8 @@ const {
 } = require("../model/user/user-controller");
 
 const {
-    findGameDtoByStatus
-} = require("../model/game-dto/game-dto-controller")
+    findGamelistDtoByStatus
+} = require("../model/gamelist-dto/gamelist-dto-controller")
 
 const fs = require("fs")
 const sharp = require('sharp');
@@ -133,7 +133,7 @@ router.get("/:id/games/:status", (req, res, next) => {
     if (req.params.id !== req.user.id) {
         res.status(403).end();
     }
-    findGameDtoByStatus(req.params.id, req.params.status)
+    findGamelistDtoByStatus(req.params.id, req.params.status)
         .then(data => { res.json(data) })
         .catch(next)
 })

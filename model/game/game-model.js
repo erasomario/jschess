@@ -30,4 +30,4 @@ const makeGame = (obj) => {
     return validate(gameSchema, obj)
 }
 
-module.exports = makeGame
+module.exports = { makeGame, gameSchema, movSchema }

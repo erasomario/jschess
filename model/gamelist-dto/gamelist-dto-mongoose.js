@@ -1,7 +1,7 @@
 const { Game } = require("../game/game-mongoose");
-const makeGameDto = require("./game-dto-model");
+const makeGameDto = require("./gamelist-dto-model");
 
-const findGameDtoByStatus = (id, status) => {
+const findGamelistDtoByStatus = (id, status) => {
     return Game.find()
         .or([{ whiteId: id }, { blackId: id }])
         .exists('result', status !== 'open')
@@ -11,7 +11,7 @@ const findGameDtoByStatus = (id, status) => {
         .then(serialize)
 }
 
-const findGamesDtoById = (id) => {
+const findGamelistDtoById = (id) => {
     return Game.findById(id)
         .populate('whiteId')
         .populate('blackId')
@@ -46,6 +46,6 @@ const serialize = (data) => {
 }
 
 module.exports = {
-    findGameDtoByStatus,
-    findGamesDtoById
+    findGamelistDtoByStatus,
+    findGamelistDtoById
 }

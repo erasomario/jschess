@@ -92,6 +92,9 @@ const isKingAttacked = (board, touched, myColor) => {
 }
 
 const includes = (arr, col, row) => {
+    if (!arr) {
+        return false
+    }
     for (let i = 0; i < arr.length; i++) {
         if (arr[i][0] === col && arr[i][1] === row) {
             return true

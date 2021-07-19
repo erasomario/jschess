@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const makeGame = require("./game-model");
+const { makeGame } = require("./game-model");
 const { Schema } = mongoose;
 
 const movSchema = Schema({
