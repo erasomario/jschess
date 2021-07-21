@@ -15,12 +15,13 @@ const movSchema = Joi.object({
 
 const gameSchema = Joi.object({
     id: Joi.string(),
-    whiteId: Joi.string().required(),
-    blackId: Joi.string().required(),
+    whiteId: Joi.string(),
+    blackId: Joi.string(),
     createdBy: Joi.string().valid('w', 'b').required(),
     createdAt: Joi.date().required().default(Date.now),
     lastMovAt: Joi.date(),
     result: Joi.string().valid('w', 'b', 'd'),
+    endType: Joi.string().valid('time'),
     movs: Joi.array().items(movSchema),
     time: Joi.number(),
     addition: Joi.number(),

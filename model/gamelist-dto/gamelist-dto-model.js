@@ -3,10 +3,10 @@ const { validate } = require('../../utils/Validation');
 
 const gameSchema = Joi.object({
     id: Joi.string().required(),
-    whiteId: Joi.string().required(),
-    blackId: Joi.string().required(),
-    whiteName: Joi.string().required(),
-    blackName: Joi.string().required(),
+    whiteId: Joi.string(),
+    blackId: Joi.string(),
+    whiteName: Joi.string(),
+    blackName: Joi.string(),
     createdAt: Joi.date().required().default(Date.now),
     lastMovAt: Joi.date(),
     result: Joi.string().valid('w', 'b', 'd'),

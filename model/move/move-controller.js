@@ -1,7 +1,6 @@
 const { getBoard, getCastling, includes, getAttacked, isKingAttacked, getAllAttackedByMe } = require("../../utils/Chess")
-const { findGamelistDtoById } = require("../gamelist-dto/gamelist-dto-mongoose")
-const { findGameById } = require("../game/game-controller")
-const { editGame } = require("../game/game-mongoose")
+const { findGamelistDtoById } = require("../gamelist-dto/gamelist-dto-controller")
+const { editGame, findGameById } = require("../game/game-controller")
 const { send } = require("../../utils/Sockets")
 const makeGameDto = require("../game-dto/game-dto-model")
 
@@ -76,11 +75,20 @@ const createMove = async (gameId, playerId, src, dest, piece, prom, cast) => {
     }
 
     setLabel(game.movs[game.movs.length - 1], tiles, kingAttacked, possibleMoves)
+
+    if (game.movs.length > 2) {
+        game.movs[game.movs.length - 1].time = (Date.now() - game.lastMovAt.getTime()) / 1000
+    }
+
+    if (game.movs.length >= 2) {
+        game.lastMovAt = Date()
+    }
+
     const savedGame = await editGame(game)
     let msg = `${myColor === 'b' ? dto.blackName : dto.whiteName} hizo una jugada`
     if (game.result) {
         //notify both that the game is over
-    }    
+    }
     send([game.whiteId, game.blackId], 'gameTurnChanged', { game: await makeGameDto(savedGame), msg })
     return savedGame
 }

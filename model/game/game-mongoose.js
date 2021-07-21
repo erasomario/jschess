@@ -14,12 +14,13 @@ const movSchema = Schema({
 });
 
 const gameSchema = Schema({
-    whiteId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
-    blackId: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    whiteId: { type: Schema.Types.ObjectId, required: false, ref: 'User' },
+    blackId: { type: Schema.Types.ObjectId, required: false, ref: 'User' },
     createdBy: { type: String, enum: ['w', 'b'], required: true },
     createdAt: { type: Date, default: Date.now, required: true },
     lastMovAt: { type: Date, required: false },
     result: { type: String, enum: ['w', 'b', 'd'], required: false },
+    endType: { type: String, enum: ['time'], required: false },
     movs: [movSchema],
     time: { type: Number },
     addition: { type: Number },
@@ -35,6 +36,7 @@ const plainToMongoose = (mongo, plain) => {
     mongo.createdAt = plain.createdAt
     mongo.lastMovAt = plain.lastMovAt
     mongo.result = plain.result
+    mongo.endType = plain.endType
     mongo.movs = plain.movs.map(m => {
         return {
             id: m.id,
@@ -55,12 +57,13 @@ const plainToMongoose = (mongo, plain) => {
 const mongooseToPlain = (raw) => {
     const obj = {
         id: raw.id,
-        whiteId: raw.whiteId.toString(),
-        blackId: raw.blackId.toString(),
+        whiteId: raw.whiteId?.toString(),
+        blackId: raw.blackId?.toString(),
         createdBy: raw.createdBy,
         createdAt: raw.createdAt,
         lastMovAt: raw.lastMovAt,
         result: raw.result,
+        endType: raw.endType,
         movs: raw.movs.map(m => {
             return {
                 id: m.id,
@@ -80,8 +83,10 @@ const mongooseToPlain = (raw) => {
     return makeGame(obj)
 }
 
-const saveGame = (game) => {
-    return new Game(makeGame(game)).save()
+const saveGame = async (game) => {
+    const ng = new Game()
+    plainToMongoose(ng, game)
+    return mongooseToPlain(await ng.save())
 }
 
 const editGame = async (game) => {
