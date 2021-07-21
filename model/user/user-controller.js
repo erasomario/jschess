@@ -140,7 +140,9 @@ const editUser = (usr) => {
     return userSrc.editUser(usr)
 }
 
-const findWithUserNameLike = userSrc.findWithUserNameLike
+const findWithUserNameLike = like => {
+    return userSrc.findWithUserNameLike(like.replace(/\s/g, ""))
+}
 
 module.exports = {
     login,
