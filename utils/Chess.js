@@ -159,8 +159,7 @@ const getAllAttackedByMe = (board, touched, myColor) => {
     let attacked = []
     board.forEach((r, i) => r.forEach((c, j) => {
         if (c && c.slice(0, 1) === myColor) {
-
-            attacked = attacked.concat(getAttacked(board, touched, myColor === 'w' ? 'b' : 'w', j, i))
+            attacked = attacked.concat(getAttacked(board, touched, myColor, j, i))
         }
     }))
     return attacked
