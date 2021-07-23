@@ -31,42 +31,48 @@ const createGame = async (userId, raw) => {
     return gameSrc.saveGame(game)
 }
 
-
-const timeout = async id => {
-    const game = await findGameById(id)
-
-    let wSecs = game.time * 60
-    let bSecs = game.time * 60
+const getElapsedTimes = game => {
+    const rta = {
+        wSecs: game.time * 60,
+        bSecs: game.time * 60
+    }
 
     for (let i = 0; i < game.movs.length; i++) {
         if (i % 2 === 0) {
             if (game.movs[i].time) {
-                wSecs -= game.movs[i].time
-                wSecs += game.addition
+                rta.wSecs -= game.movs[i].time
+                rta.wSecs += game.addition
             }
         } else {
             if (game.movs[i].time) {
-                bSecs -= game.movs[i].time
-                bSecs += game.addition
+                rta.bSecs -= game.movs[i].time
+                rta.bSecs += game.addition
             }
         }
     }
 
     if (game.movs.length % 2 === 0) {
-        wSecs -= (Date.now() - game.lastMovAt.getTime()) / 1000
+        rta.wSecs -= (Date.now() - game.lastMovAt.getTime()) / 1000
     } else {
-        bSecs -= (Date.now() - game.lastMovAt.getTime()) / 1000
+        rta.bSecs -= (Date.now() - game.lastMovAt.getTime()) / 1000
     }
+    return rta
+}
 
-    if (wSecs <= 0) {
-        game.result = "b"
-    } else if (bSecs <= 0) {
-        game.result = "w"
-    }
-    if (game.result) {
-        game.endType = "time"
-        const savedGame = await editGame(game)
-        send([game.whiteId, game.blackId], 'gameTurnChanged', { game: await makeGameDto(savedGame), msg: "" })
+const timeout = async id => {
+    const game = await findGameById(id)
+    if (!game.result) {
+        const times = getElapsedTimes(game)
+        if (times.wSecs <= 0) {
+            game.result = "b"
+        } else if (times.bSecs <= 0) {
+            game.result = "w"
+        }
+        if (game.result) {
+            game.endType = "time"
+            const savedGame = await editGame(game)
+            send([game.whiteId, game.blackId], 'gameChanged', await makeGameDto(savedGame))
+        }
     }
 }
 
@@ -77,5 +83,6 @@ module.exports = {
     createGame,
     editGame,
     findGameById,
+    getElapsedTimes,
     timeout
 }
