@@ -275,4 +275,4 @@ const getAttacked = (board, touched, myColor, c, r, checkForKingAttacks = true) 
     return arr
 }
 
-module.exports = { getBoard, getAttacked, getCastling, isKingAttacked, getAllAttackedByMe, includes }
+module.exports = { getBoard, getAttacked, getCastling, isKingAttacked, getAllAttackedByMe, getAllAttackedByEnemy, simulateMov, includes }
