@@ -20,7 +20,7 @@ const gameSchema = Schema({
     createdAt: { type: Date, default: Date.now, required: true },
     lastMovAt: { type: Date, required: false },
     result: { type: String, enum: ['w', 'b', 'd'], required: false },
-    endType: { type: String, enum: ['time'], required: false },
+    endType: { type: String, enum: ['time','check', 'stale'], required: false },
     movs: [movSchema],
     time: { type: Number },
     addition: { type: Number },
