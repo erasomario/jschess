@@ -11,12 +11,20 @@ const gameDtoSchema = gameSchema.append({
 })
 
 const makeGameDto = async (obj) => {
+    if (!obj.whiteId) {
+        obj.whiteName = "Autómata"
+    }
+
+    if (!obj.blackId) {
+        obj.blackName = "Autómata"
+    }
+
     if (!obj.whiteName && obj.whiteId) {
         const white = await findUserById(obj.whiteId)
         obj.whiteName = white.username
         obj.whiteHasPicture = white.hasPicture
     }
-    if (!obj.blackName  && obj.blackId) {
+    if (!obj.blackName && obj.blackId) {
         const black = await findUserById(obj.blackId)
         obj.blackName = black.username
         obj.blackHasPicture = black.hasPicture
