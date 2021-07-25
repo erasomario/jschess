@@ -1,7 +1,6 @@
 const express = require("express");
 const makeGameDto = require("../model/game-dto/game-dto-model");
-const { createGame, findGameById, timeout } = require("../model/game/game-controller");
-const { createMove } = require("../model/move/move-controller");
+const { createGame, createMove, findGameById, timeout } = require("../model/game/game-controller");
 
 var router = express.Router();
 
@@ -19,8 +18,9 @@ router.get("/:id", (req, res, next) => {
         .catch(next)
 })
 
-router.post("/:id/moves", (req, res, next) => {
-    createMove(req.params.id, req.user.id, req.body.src, req.body.dest, req.body.piece, req.body.prom, req.body.cast)
+router.post("/:id/moves", async (req, res, next) => {
+    const game = await findGameById(req.params.id)
+    createMove(game, req.user.id, req.body.src, req.body.dest, req.body.piece, req.body.prom)
         .then(() => res.status(200).end())
         .catch(next)
 })
