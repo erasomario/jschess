@@ -14,8 +14,15 @@ const disconnected = (id, socket) => {
     }
 }
 
-const send = (ids, event, payload) => {
-    ids.forEach(id => {
+const send = (game, event, payload) => {
+    const dest = []
+    if (game.whiteId) {
+        dest.push(game.whiteId)
+    }
+    if (game.blackId) {
+        dest.push(game.blackId)
+    }
+    dest.forEach(id => {
         if (!id) {
             throw Error("Dest Id should not be null")
         }
