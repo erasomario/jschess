@@ -12,11 +12,13 @@ const gameDtoSchema = gameSchema.append({
 
 const makeGameDto = async (obj) => {
     if (!obj.whiteId) {
-        obj.whiteName = "Autómata"
+        obj.whiteName = "Robot"
+        obj.whiteHasPicture = true
     }
 
     if (!obj.blackId) {
-        obj.blackName = "Autómata"
+        obj.blackName = "Robot"
+        obj.blackHasPicture = true
     }
 
     if (!obj.whiteName && obj.whiteId) {

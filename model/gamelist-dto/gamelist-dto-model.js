@@ -16,6 +16,13 @@ const gameSchema = Joi.object({
 })
 
 const makeGamelistDto = (obj) => {
+    if (!obj.whiteId) {
+        obj.whiteName = "Robot"
+    }
+
+    if (!obj.blackId) {
+        obj.blackName = "Robot"
+    }
     return validate(gameSchema, obj)
 }
 
