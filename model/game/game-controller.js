@@ -49,7 +49,7 @@ const getElapsedTimes = game => {
         bSecs: game.time * 60
     }
 
-    if (game.movs.length > 2) {
+    if (game.movs.length >= 2) {
         for (let i = 0; i < game.movs.length; i++) {
             if (i % 2 === 0) {
                 if (game.movs[i].time) {
@@ -63,6 +63,7 @@ const getElapsedTimes = game => {
                 }
             }
         }
+
         if (game.movs.length % 2 === 0) {
             rta.wSecs -= (Date.now() - game.lastMovAt.getTime()) / 1000
         } else {
