@@ -14,7 +14,22 @@ const disconnected = (id, socket) => {
     }
 }
 
-const send = (game, event, payload) => {
+const sendToList = (dest, event, payload) => {
+
+    dest.forEach(id => {
+        if (!id) {
+            throw Error("Dest Id should not be null")
+        }
+        if (connections.has(id)) {
+            connections.get(id).forEach(c => {
+                console.log("emitting", dest, event)
+                c.emit(event, payload)
+            });
+        }
+    });
+}
+
+const sendToGame = (game, event, payload) => {
     const dest = []
     if (game.whiteId) {
         dest.push(game.whiteId)
@@ -22,16 +37,12 @@ const send = (game, event, payload) => {
     if (game.blackId) {
         dest.push(game.blackId)
     }
-    dest.forEach(id => {
-        if (!id) {
-            throw Error("Dest Id should not be null")
-        }
-        if (connections.has(id)) {
-            connections.get(id).forEach(c => {
-                c.emit(event, payload)
-            });
-        }
-    });
+    sendToList(dest, event, payload)
 }
 
-module.exports = { connected, disconnected, send }
+const sendToUser = (userId, event, payload) => {
+    console.log(payload)
+    sendToList([userId], event, payload)
+}
+
+module.exports = { connected, disconnected, sendToGame, sendToUser }

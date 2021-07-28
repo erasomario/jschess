@@ -1,10 +1,11 @@
 const Joi = require('joi');
-const { send } = require('../../utils/Sockets');
+const { sendToGame, sendToUser } = require('../../utils/Sockets');
 const { validate } = require('../../utils/Validation');
 const makeGameDto = require('../game-dto/game-dto-model');
 const gameSrc = require('../game/game-mongoose');
 const { getAllAttackedByMe, getBoard, getAttacked, includes, getCastling, isKingAttacked, checkEnoughMaterial } = require("../../utils/Chess");
 const { generateBotMove } = require('../bot/bot');
+const { findGamelistDtoByStatus } = require('../gamelist-dto/gamelist-dto-controller');
 
 const findGameById = gameSrc.findGameById
 const editGame = gameSrc.editGame
@@ -42,6 +43,8 @@ const createGame = async (userId, raw) => {
     }
     game.movs = []
     const savedGame = await gameSrc.saveGame(game)
+
+    //if I'm playing against the bot and it's playing white, it's its turn to start
     if (!game.whiteId) {
         setTimeout(async () => {
             try {
@@ -50,6 +53,16 @@ const createGame = async (userId, raw) => {
                 console.log(e)
             }
         }, 500)
+    }
+
+    //letting know the other player that I'm inviting him to a game
+    if (obj.opponentId) {
+        const openCount = (await findGamelistDtoByStatus(obj.opponentId, "open")).length
+        if (openCount === 1) {
+            sendToUser(obj.opponentId, "openNewGame", await makeGameDto(savedGame))
+        } else {
+            sendToUser(obj.opponentId, "invitedToGame", await makeGameDto(savedGame))
+        }
     }
     return savedGame
 }
@@ -86,7 +99,7 @@ const getElapsedTimes = game => {
 
 const timeout = async id => {
     const game = await findGameById(id)
-    if (!game.result) {
+    if (!game.result && game.time) {
         const times = getElapsedTimes(game)
         if (times.wSecs <= 0) {
             game.result = "b"
@@ -96,7 +109,7 @@ const timeout = async id => {
         if (game.result) {
             game.endType = "time"
             const savedGame = await editGame(game)
-            send(game, 'gameChanged', await makeGameDto(savedGame))
+            sendToGame(game, 'gameChanged', await makeGameDto(savedGame))
         }
     }
 }
@@ -180,13 +193,15 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
         game.lastMovAt = new Date()
     }
 
-    const times = getElapsedTimes(game)
-    if (times.wSecs <= 0) {
-        game.result = "b"
-        game.endType = "time"
-    } else if (times.bSecs <= 0) {
-        game.result = "w"
-        game.endType = "time"
+    if (game.time) {
+        const times = getElapsedTimes(game)
+        if (times.wSecs <= 0) {
+            game.result = "b"
+            game.endType = "time"
+        } else if (times.bSecs <= 0) {
+            game.result = "w"
+            game.endType = "time"
+        }
     }
 
     if (!game.result) {
@@ -197,9 +212,10 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
     }
 
     const savedGame = await editGame(game)
-    send(savedGame, "gameChanged", await makeGameDto(savedGame))
     if ((savedGame.movs.length % 2 === 0 && !savedGame.whiteId) || (savedGame.movs.length % 2 !== 0 && !game.blackId)) {
         await botMove(savedGame)
+    } else {
+        sendToGame(savedGame, "gameChanged", await makeGameDto(savedGame))
     }
     return null
 }

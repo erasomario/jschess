@@ -24,7 +24,7 @@ const gameSchema = Joi.object({
     endType: Joi.string().valid('time','check', 'stale', 'material'),
     movs: Joi.array().items(movSchema),
     time: Joi.number(),
-    addition: Joi.number(),
+    addition: Joi.number()
 })
 
 const makeGame = (obj) => {
