@@ -21,6 +21,52 @@ const getPosition = (board, piece) => {
     return null
 }
 
+const checkEnoughMaterial = tiles => {
+    const w = { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 }
+    const b = { p: 0, n: 0, b: 0, r: 0, q: 0, k: 0 }
+    const rta = { w, b }
+
+    tiles.forEach(row => row.forEach(p => {
+        if (p) {
+            rta[p.slice(0, 1)][p.slice(1, 2)]++;
+        }
+    }))
+
+    const rule = (arr) => {
+        return arr.reduce((and, cur) => and && rta[cur[0]][cur[1]] === cur[2], true)
+    }
+
+    const nsAndBs = (wn, bn, wb, bb) => rule([["w", "n", wn ? 1 : 0], ["w", "b", wb ? 1 : 0], ["b", "n", bn ? 1 : 0], ["b", "b", bb ? 1 : 0]])
+
+    const isBlack = (col, row) => col % 2 !== 0 ? row % 2 !== 0 : row % 2 === 0
+
+    if (rule([["w", "p", 0], ["b", "p", 0], ["w", "r", 0], ["b", "r", 0], ["w", "q", 0], ["b", "q", 0], ["w", "k", 1], ["b", "k", 1]])) {
+        //king against king
+        if (nsAndBs(false, false, false, false)) {
+            return false
+        }
+        if (nsAndBs(false, false, true, false) || nsAndBs(false, false, false, true)) {
+            return false
+        }
+        if (nsAndBs(true, false, false, false) || nsAndBs(false, true, false, false)) {
+            return false
+        }
+        if (nsAndBs(false, false, true, true)) {
+            const bishopColors = []
+            tiles.forEach((row, i) => row.forEach((p, j) => {
+                if (p && p.slice(1, 2) === "b") {
+                    bishopColors.push(isBlack(i, j))
+                }
+            }))
+            //both bishops on squares of the same color
+            return !(bishopColors[0] && bishopColors[1]) || (!bishopColors[0] && !bishopColors[1])
+        }
+    }
+    return true
+}
+
+
+
 const getBoard = (movs, turn) => {
     const board = getStartBoard()
     const whiteCaptured = []
@@ -275,4 +321,14 @@ const getAttacked = (board, touched, myColor, c, r, checkForKingAttacks = true) 
     return arr
 }
 
-module.exports = { getBoard, getAttacked, getCastling, isKingAttacked, getAllAttackedByMe, getAllAttackedByEnemy, simulateMov, includes }
+module.exports = {
+    getBoard,
+    getAttacked,
+    getCastling,
+    isKingAttacked,
+    getAllAttackedByMe,
+    getAllAttackedByEnemy,
+    simulateMov,
+    includes,
+    checkEnoughMaterial,
+}
