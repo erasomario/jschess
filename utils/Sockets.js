@@ -22,7 +22,6 @@ const sendToList = (dest, event, payload) => {
         }
         if (connections.has(id)) {
             connections.get(id).forEach(c => {
-                console.log("emitting", dest, event)
                 c.emit(event, payload)
             });
         }
@@ -41,7 +40,6 @@ const sendToGame = (game, event, payload) => {
 }
 
 const sendToUser = (userId, event, payload) => {
-    console.log(payload)
     sendToList([userId], event, payload)
 }
 

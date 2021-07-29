@@ -5,7 +5,6 @@ const makeGameDto = require('../game-dto/game-dto-model');
 const gameSrc = require('../game/game-mongoose');
 const { getAllAttackedByMe, getBoard, getAttacked, includes, getCastling, isKingAttacked, checkEnoughMaterial } = require("../../utils/Chess");
 const { generateBotMove } = require('../bot/bot');
-const { findGamelistDtoByStatus } = require('../gamelist-dto/gamelist-dto-controller');
 
 const findGameById = gameSrc.findGameById
 const editGame = gameSrc.editGame
@@ -29,7 +28,9 @@ const createGame = async (userId, raw) => {
     const game = {
         createdAt: new Date(),
         time: obj.time,
-        addition: obj.addition
+        addition: obj.addition,
+        requestedColor: obj.color,
+        opponentNotified: !obj.opponentId
     }
 
     if (obj.color === 'w' || (obj.color === 'wb' && Math.random() <= 0.5)) {
@@ -57,12 +58,13 @@ const createGame = async (userId, raw) => {
 
     //letting know the other player that I'm inviting him to a game
     if (obj.opponentId) {
-        const openCount = (await findGamelistDtoByStatus(obj.opponentId, "open")).length
+        /*const openCount = (await findGamelistDtoByStatus(obj.opponentId, "open")).length
         if (openCount === 1) {
             sendToUser(obj.opponentId, "openNewGame", await makeGameDto(savedGame))
         } else {
             sendToUser(obj.opponentId, "invitedToGame", await makeGameDto(savedGame))
-        }
+        }*/
+        sendNotNotifiedCount(obj.opponentId)
     }
     return savedGame
 }
@@ -243,11 +245,31 @@ const setLabel = (mov, board, kingAttacked, possibleMoves) => {
     }
 }
 
+const setOpponentNotification = async (userId, gameId) => {
+    const game = await findGameById(gameId)
+    if (!game.opponentNotified) {
+        const myColor = game.whiteId === userId ? "w" : "b"
+        if (game.createdBy === myColor) {
+            throw Error("you're not the opponent")
+        }
+        game.opponentNotified = true
+        await gameSrc.editGame(game)
+    }
+    await sendNotNotifiedCount(userId)
+}
+
+const sendNotNotifiedCount = async (userId) => {
+    sendToUser(userId, "opponentNotificationUpdated", await gameSrc.findNotNotifiedGamesCount(userId))
+}
+
 module.exports = {
     createGame,
     createMove,
     editGame,
     findGameById,
     getElapsedTimes,
+    setOpponentNotification,
+    findNotNotifiedGamesCount: gameSrc.findNotNotifiedGamesCount,
+    sendNotNotifiedCount,
     timeout
 }

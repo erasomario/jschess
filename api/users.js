@@ -19,6 +19,7 @@ const fs = require("fs")
 const sharp = require('sharp');
 const path = require("path");
 const makeApiKey = require("../model/api-key/api-key-model");
+const { findNotNotifiedGamesCount } = require("../model/game/game-controller");
 
 var router = express.Router();
 
@@ -98,6 +99,16 @@ router.put("/:id/username", (req, res, next) => {
         editUsername(req.user.id, req.body.password, req.body.newUsername).then(user => {
             res.json(makeUserDto(user))
         }).catch(next)
+    } else {
+        res.status(403).end();
+    }
+})
+
+router.get("/:id/notNotifiedGamesCount", (req, res, next) => {
+    if (req.user.id === req.params.id) {
+        findNotNotifiedGamesCount(req.params.id)
+            .then(c => res.json({ count: c }))
+            .catch(next)
     } else {
         res.status(403).end();
     }

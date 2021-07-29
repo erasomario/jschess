@@ -31,7 +31,9 @@ const serializeOne = (raw) => {
         result: raw.result,
         time: raw.time,
         addition: raw.addition,
-        turn: raw.movs.length
+        opponentNotified: raw.opponentNotified,
+        createdBy: raw.createdBy,
+        turn: raw.movs.length        
     })
 }
 

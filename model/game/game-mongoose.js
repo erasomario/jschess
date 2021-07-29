@@ -20,10 +20,12 @@ const gameSchema = Schema({
     createdAt: { type: Date, default: Date.now, required: true },
     lastMovAt: { type: Date, required: false },
     result: { type: String, enum: ['w', 'b', 'd'], required: false },
-    endType: { type: String, enum: ['time','check', 'stale', 'material'], required: false },
+    endType: { type: String, enum: ['time', 'check', 'stale', 'material'], required: false },
     movs: [movSchema],
     time: { type: Number },
     addition: { type: Number },
+    requestedColor: { type: String, enum: ['w', 'wb', 'd'], required: true },
+    opponentNotified: { type: Boolean, default: false, required: true }
 });
 
 const Game = mongoose.model("Game", gameSchema);
@@ -37,6 +39,8 @@ const plainToMongoose = (mongo, plain) => {
     mongo.lastMovAt = plain.lastMovAt
     mongo.result = plain.result
     mongo.endType = plain.endType
+    mongo.requestedColor = plain.requestedColor
+    mongo.opponentNotified = plain.opponentNotified
     mongo.movs = plain.movs.map(m => {
         return {
             id: m.id,
@@ -64,6 +68,8 @@ const mongooseToPlain = (raw) => {
         lastMovAt: raw.lastMovAt,
         result: raw.result,
         endType: raw.endType,
+        requestedColor: raw.requestedColor,
+        opponentNotified: raw.opponentNotified,
         movs: raw.movs.map(m => {
             return {
                 id: m.id,
@@ -99,9 +105,17 @@ const findGameById = async (id) => {
     return mongooseToPlain(await Game.findById(id))
 }
 
+const findNotNotifiedGamesCount = (userId) => {
+    return Game.find()
+        .or([{ whiteId: userId, createdBy: "b" }, { blackId: userId, createdBy: "w" }])
+        .and({opponentNotified: false})
+        .countDocuments()
+}
+
 module.exports = {
     saveGame,
     editGame,
     findGameById,
+    findNotNotifiedGamesCount,
     Game
 }

@@ -13,6 +13,8 @@ const gameSchema = Joi.object({
     time: Joi.number(),
     addition: Joi.number(),
     turn: Joi.number().required(),
+    opponentNotified: Joi.boolean().required(),
+    createdBy: Joi.string().valid('w', 'b'),
 })
 
 const makeGamelistDto = (obj) => {

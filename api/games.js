@@ -1,6 +1,6 @@
 const express = require("express");
 const makeGameDto = require("../model/game-dto/game-dto-model");
-const { createGame, createMove, findGameById, timeout } = require("../model/game/game-controller");
+const { createGame, createMove, findGameById, timeout, setOpponentNotification } = require("../model/game/game-controller");
 
 var router = express.Router();
 
@@ -15,6 +15,12 @@ router.get("/:id", (req, res, next) => {
     findGameById(req.params.id)
         .then(makeGameDto)
         .then(g => res.json(g))
+        .catch(next)
+})
+
+router.post("/:id/opponentNotification", (req, res, next) => {
+    setOpponentNotification(req.user.id, req.params.id)
+        .then(res.end())
         .catch(next)
 })
 
