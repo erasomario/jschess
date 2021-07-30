@@ -215,10 +215,15 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
 
     const savedGame = await editGame(game)
     if ((savedGame.movs.length % 2 === 0 && !savedGame.whiteId) || (savedGame.movs.length % 2 !== 0 && !game.blackId)) {
-        await botMove(savedGame)
-    } else {
-        sendToGame(savedGame, "gameChanged", await makeGameDto(savedGame))
+        setTimeout(async () => {
+            try {
+                await botMove(savedGame)
+            } catch (e) {
+                console.log(e)
+            }
+        }, 1500)
     }
+    sendToGame(savedGame, "gameChanged", await makeGameDto(savedGame))
     return null
 }
 
