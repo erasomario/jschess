@@ -21,12 +21,13 @@ const gameSchema = Joi.object({
     createdAt: Joi.date().required().default(Date.now),
     lastMovAt: Joi.date(),
     result: Joi.string().valid('w', 'b', 'd'),
-    endType: Joi.string().valid('time','check', 'stale', 'material'),
+    endType: Joi.string().valid('time','check', 'stale', 'material', 'agreed', 'surrender'),
     movs: Joi.array().items(movSchema),
     time: Joi.number(),
     addition: Joi.number(),
     requestedColor: Joi.string().valid('w', 'wb', 'd').required(),
-    opponentNotified: Joi.boolean().default(false).required()
+    opponentNotified: Joi.boolean().default(false).required(),
+    drawOfferedBy: Joi.string().valid('w', 'b')
 })
 
 const makeGame = (obj) => {

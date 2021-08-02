@@ -1,6 +1,8 @@
 const express = require("express");
+const Joi = require("joi");
 const makeGameDto = require("../model/game-dto/game-dto-model");
-const { createGame, createMove, findGameById, timeout, setOpponentNotification } = require("../model/game/game-controller");
+const { createGame, createMove, findGameById, timeout, setOpponentNotification, offerDraw, surrender, rejectDraw, acceptDraw } = require("../model/game/game-controller");
+const { validate } = require("../utils/Validation");
 
 var router = express.Router();
 
@@ -20,7 +22,7 @@ router.get("/:id", (req, res, next) => {
 
 router.post("/:id/opponentNotification", (req, res, next) => {
     setOpponentNotification(req.user.id, req.params.id)
-        .then(res.end())
+        .then(() => res.end())
         .catch(next)
 })
 
@@ -36,5 +38,29 @@ router.post("/:id/timeout", (req, res, next) => {
         .then(() => res.status(200).end())
         .catch(next)
 })
+
+router.post("/:id/drawOffering", function (req, res, next) {
+    offerDraw(req.user.id, req.params.id)
+        .then(() => res.end())
+        .catch(next)
+});
+
+router.put("/:id/drawOffering", function (req, res, next) {
+    try {
+        validate(Joi.object({ result: Joi.string().valid('accept', 'reject').required() }), req.body)
+    } catch (e) {
+        next(e)
+    }
+    const fx = req.body.result === "accept" ? acceptDraw : rejectDraw
+    fx(req.user.id, req.params.id)
+        .then(() => res.end())
+        .catch(next)
+});
+
+router.post("/:id/surrender", async function (req, res, next) {
+    surrender(req.user.id, req.params.id)
+        .then(() => res.end())
+        .catch(next)
+});
 
 module.exports = router;

@@ -1,10 +1,10 @@
-const Joi = require('joi');
-const { sendToGame, sendToUser } = require('../../utils/Sockets');
-const { validate } = require('../../utils/Validation');
-const makeGameDto = require('../game-dto/game-dto-model');
-const gameSrc = require('../game/game-mongoose');
-const { getAllAttackedByMe, getBoard, getAttacked, includes, getCastling, isKingAttacked, checkEnoughMaterial } = require("../../utils/Chess");
-const { generateBotMove } = require('../bot/bot');
+const Joi = require('joi')
+const gameSrc = require('../game/game-mongoose')
+const { sendToGame, sendToUser } = require('../../utils/Sockets')
+const { validate } = require('../../utils/Validation')
+const makeGameDto = require('../game-dto/game-dto-model')
+const { getAllAttackedByMe, getBoard, getAttacked, includes, getCastling, isKingAttacked, checkEnoughMaterial } = require("../../utils/Chess")
+const { generateBotMove } = require('../bot/bot')
 
 const findGameById = gameSrc.findGameById
 const editGame = gameSrc.editGame
@@ -263,8 +263,65 @@ const setOpponentNotification = async (userId, gameId) => {
     await sendNotNotifiedCount(userId)
 }
 
-const sendNotNotifiedCount = async (userId) => {
+const sendNotNotifiedCount = async userId => {
     sendToUser(userId, "opponentNotificationUpdated", await gameSrc.findNotNotifiedGamesCount(userId))
+}
+
+const surrender = async (userId, gameId) => {
+    const game = await gameSrc.findGameById(gameId)
+    const myColor = game.whiteId === userId ? "w" : "b"
+
+    if (game.result) {
+        throw Error("You can't surrender on an already finished game")
+    }
+
+    if (game.movs.length < 2) {
+        throw Error("You can't surrender on a game that hasn't started yet")
+    }
+    game.result = (myColor === "w" ? "b" : "w")
+    game.endType = "surrender"
+    const savedGame = await editGame(game)
+    sendToGame(game, "gameChanged", await makeGameDto(savedGame))
+}
+
+const offerDraw = async (userId, gameId) => {
+    const game = await gameSrc.findGameById(gameId)
+    const myColor = game.whiteId === userId ? "w" : "b"
+    game.drawOfferedBy = myColor
+    await editGame(game)
+    sendToUser(myColor === "w" ? game.blackId : game.whiteId, "drawOffered", game.id)
+    if (myColor === "w" && !game.blackId || myColor === "b" && !game.whiteId) {
+        rejectDraw(null, gameId)
+    }
+}
+
+const acceptDraw = async (userId, gameId) => {
+    const game = await gameSrc.findGameById(gameId)
+    const myColor = game.whiteId === userId ? "w" : "b"
+    if (!game.drawOfferedBy) {
+        throw Error("there's not draw offering to accept")
+    }
+    if (game.drawOfferedBy === myColor) {
+        throw Error("you cannot accept a draw offered by yourself")
+    }
+    game.result = "d"
+    game.endType = "agreed"
+    const savedGame = await editGame(game)
+    sendToGame(game, "gameChanged", await makeGameDto(savedGame))
+}
+
+const rejectDraw = async (userId, gameId) => {
+    const game = await gameSrc.findGameById(gameId)
+    const myColor = game.whiteId === userId ? "w" : "b"
+    if (!game.drawOfferedBy) {
+        throw Error("there's not draw offering to reject")
+    }
+    if (game.drawOfferedBy === myColor) {
+        throw Error("you cannot reject a draw offered by yourself")
+    }
+    game.drawOfferedBy = undefined
+    await editGame(game)
+    sendToUser(myColor === "w" ? game.blackId : game.whiteId, "drawRejected", game.id)
 }
 
 module.exports = {
@@ -276,5 +333,9 @@ module.exports = {
     setOpponentNotification,
     findNotNotifiedGamesCount: gameSrc.findNotNotifiedGamesCount,
     sendNotNotifiedCount,
-    timeout
+    timeout,
+    offerDraw,
+    acceptDraw,
+    rejectDraw,
+    surrender
 }
