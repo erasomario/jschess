@@ -16,6 +16,7 @@ const userSchema = Schema({
     },
     createdAt: { type: Date, default: Date.now },
     hasPicture: { type: Boolean },
+    boardOpts: { type: String },
     recoveryKey: {
         key: String,
         createdAt: Date,
@@ -41,6 +42,7 @@ const editUser = (user) => {
             u.createdAt = user.createdAt
             u.recoveryKey = user.recoveryKey
             u.hasPicture = user.hasPicture
+            u.boardOpts = user.boardOpts
             return u
         })
         .then(u => u.save())
@@ -73,9 +75,9 @@ const findWithUserNameLike = async (like) => {
     return serialize(await User.find({ username: new RegExp(like, "i") }))
 }
 
-const serializeOne = ({ id, email, username, password, createdAt, hasPicture, recoveryKey }) => {
+const serializeOne = ({ id, email, username, password, createdAt, hasPicture, recoveryKey, boardOpts }) => {
     const { key: recKey, createdAt: recCreatedAt } = recoveryKey
-    const obj = { id, email, username, password, createdAt, hasPicture, recoveryKey: { key: recKey, createdAt: recCreatedAt } }
+    const obj = { id, email, username, password, createdAt, hasPicture, boardOpts, recoveryKey: { key: recKey, createdAt: recCreatedAt } }
     if (!recKey) {
         delete obj.recoveryKey
     }

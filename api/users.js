@@ -9,6 +9,7 @@ const {
     editUsername,
     editPassword,
     editEmail,
+    editBoardOptions,
 } = require("../model/user/user-controller");
 
 const {
@@ -97,6 +98,16 @@ router.put("/:id/picture", async (req, res, next) => {
 router.put("/:id/username", (req, res, next) => {
     if (req.user.id === req.params.id) {
         editUsername(req.user.id, req.body.password, req.body.newUsername).then(user => {
+            res.json(makeUserDto(user))
+        }).catch(next)
+    } else {
+        res.status(403).end();
+    }
+})
+
+router.put("/:id/boardOptions", (req, res, next) => {
+    if (req.user.id === req.params.id) {
+        editBoardOptions(req.user.id, req.body).then(user => {
             res.json(makeUserDto(user))
         }).catch(next)
     } else {

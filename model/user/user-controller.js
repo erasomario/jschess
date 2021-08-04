@@ -69,6 +69,12 @@ const editUsername = async (id, password, newUsername) => {
     return userSrc.editUser(makeUser(user))
 }
 
+const editBoardOptions = async (id, opts) => {    
+    const user = await userSrc.findUserById(id)
+    user.boardOpts = JSON.stringify(opts)
+    return userSrc.editUser(makeUser(user))
+}
+
 const recoverPassword = async (userId, recoveryKey, newPass) => {
     validate(Joi.object({
         userId: Joi.string().label('id del usuario').required(),
@@ -153,6 +159,7 @@ module.exports = {
     editUsername,
     editPassword,
     editEmail,
+    editBoardOptions,
     findUserById,
     findWithUserNameLike
 }

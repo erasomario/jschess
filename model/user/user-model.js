@@ -13,6 +13,7 @@ const schema = Joi.object({
     password: Joi.string().label('contraseña').required().max(72).min(6),
     createdAt: Joi.date(),
     hasPicture: Joi.boolean(),
+    boardOpts: Joi.string(),
     recoveryKey: recoveryKey
 })
 
