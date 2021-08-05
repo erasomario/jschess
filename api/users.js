@@ -47,10 +47,8 @@ router.get("/:id", (req, res, next) => {
         }).catch(next)
 });
 
-const FILES_PATH = 'C:\\PLANOS\\'
-
 router.get("/:id/picture", (req, res) => {
-    const file = fs.readFileSync(FILES_PATH + req.params.id, 'binary')
+    const file = fs.readFileSync(path.join(process.env.PROFILE_PICTURES_PATH, req.params.id), 'binary')
     res.setHeader('Content-Length', file.length)
     res.write(file, 'binary')
     res.end()
@@ -58,7 +56,7 @@ router.get("/:id/picture", (req, res) => {
 
 router.delete("/:id/picture", async (req, res, next) => {
     if (req.user.id === req.params.id) {
-        fs.unlink(path.join(FILES_PATH, req.user.id), err => {
+        fs.unlink(path.join(process.env.PROFILE_PICTURES_PATH, req.user.id), err => {
             if (err) {
                 next(err)
             } else {
@@ -85,7 +83,7 @@ router.put("/:id/picture", async (req, res, next) => {
             await editUser(user)
             await sharp(file.data)
                 .resize(150, 150, { fit: 'cover' })
-                .toFile(FILES_PATH + user.id)
+                .toFile(path.join(process.env.PROFILE_PICTURES_PATH, user.id))
             res.status(200).end()
         } else {
             res.status(403).end()
