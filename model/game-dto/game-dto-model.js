@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const { validate } = require('../../utils/Validation');
 const { gameSchema } = require('../game/game-model');
-const { findUserById } = require('../user/user-controller');
+const { findUserById } = require('../user/user-logic');
 
 const gameDtoSchema = gameSchema.append({
     whiteName: Joi.string(),
@@ -10,7 +10,8 @@ const gameDtoSchema = gameSchema.append({
     blackHasPicture: Joi.boolean(),
 })
 
-const makeGameDto = async (obj) => {
+const makeGameDto = async game => {
+    const obj = { ...game }
     if (!obj.whiteId) {
         obj.whiteName = "Robot"
         obj.whiteHasPicture = true
