@@ -60,11 +60,15 @@ const generateBotMove = game => {
 
         const max = moves.reduce((max, m) => Math.max(m.score, max), Number.NEGATIVE_INFINITY)
         const cand = moves.filter(m => m.score === max)
-        const mov = cand[Math.floor(Math.random() * cand.length)]
-        //TODO, try to choose the best move among the ones with the same score instead of random
-        console.log(":::::::::::::::::::::::::::::::");
+        //TODO, try to choose the best move among the ones with the same score instead of random        
+        //or at least try not to move important pieces randomly
+        const mov = cand[Math.floor(Math.random() * cand.length)]        
         const smoves = moves.sort((a, b) => b.score - a.score)
-        smoves.forEach(m => console.log(m))
+        if (process.env.LOG_BOT_LOGIC === "show") {
+            console.log("Candidate movements _____________________________");
+            smoves.forEach(m => console.log(m))
+            console.log("Choosen", mov)
+        }
         return { userId: myColor === "w" ? game.whiteId : game.blackId, ...mov }
     }
 }
