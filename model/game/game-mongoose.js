@@ -43,8 +43,11 @@ const plainToMongoose = (mongo, plain) => {
     mongo.requestedColor = plain.requestedColor
     mongo.opponentNotified = plain.opponentNotified
     mongo.drawOfferedBy = plain.drawOfferedBy
-    mongo.movs = plain.movs.map(m => {
-        return {
+    //as movs is an only add collection and items are added one at time
+    //it's safe to asume that if sizes doesn't match, it's due to the last item is missing
+    if (mongo.movs.length !== plain.movs.length) {
+        const m = plain.movs[plain.movs.length - 1]
+        mongo.movs.push({
             id: m.id,
             sCol: m.sCol,
             sRow: m.sRow,
@@ -54,58 +57,43 @@ const plainToMongoose = (mongo, plain) => {
             prom: m.prom,
             label: m.label,
             time: m.time
-        }
-    })
+        })
+    }
     mongo.time = plain.time
     mongo.addition = plain.addition
 }
 
-const mongooseToPlain = (raw) => {
-    const obj = {
-        id: raw.id,
-        whiteId: raw.whiteId?.toString(),
-        blackId: raw.blackId?.toString(),
-        createdBy: raw.createdBy,
-        createdAt: raw.createdAt,
-        lastMovAt: raw.lastMovAt,
-        result: raw.result,
-        endType: raw.endType,
-        requestedColor: raw.requestedColor,
-        opponentNotified: raw.opponentNotified,
-        drawOfferedBy: raw.drawOfferedBy,
-        movs: raw.movs.map(m => {
-            return {
-                id: m.id,
-                sCol: m.sCol,
-                sRow: m.sRow,
-                dCol: m.dCol,
-                dRow: m.dRow,
-                cast: m.cast,
-                prom: m.prom,
-                label: m.label,
-                time: m.time
-            }
-        }),
-        time: raw.time,
-        addition: raw.addition,
-    }
+const mongooseToPlain = (obj) => {
+    obj.id = obj._id.toString()
+    delete obj._id
+    delete obj.__v
+    obj.whiteId = obj.whiteId?.toString()
+    obj.blackId = obj.blackId?.toString()
+    obj.movs = obj.movs.map(m => {
+        m.id = m._id.toString()
+        delete m._id
+        delete m.__v
+        return m
+    })
     return makeGame(obj)
 }
 
 const saveGame = async (game) => {
     const ng = new Game()
     plainToMongoose(ng, game)
-    return mongooseToPlain(await ng.save())
+    return mongooseToPlain(await ng.save().toObject())
 }
 
 const editGame = async (game) => {
     const mGame = await Game.findById(game.id)
     plainToMongoose(mGame, game)
-    return mongooseToPlain(await mGame.save())
+    return mongooseToPlain(await mGame.save().toObject())
 }
 
 const findGameById = async (id) => {
-    return mongooseToPlain(await Game.findById(id))
+    const mong = await Game.findById(id).lean()
+    const plain = mongooseToPlain(mong)
+    return plain
 }
 
 const findNotNotifiedGamesCount = (userId) => {
@@ -115,10 +103,21 @@ const findNotNotifiedGamesCount = (userId) => {
         .countDocuments()
 }
 
+const findGamesByStatus = (id, status) => {
+    return Game.find()
+        .or([{ whiteId: id }, { blackId: id }])
+        .exists('result', status !== 'open')
+        .sort({ createdAt: 'desc' })
+        .populate('whiteId')
+        .populate('blackId')
+        .then(l => l.map(mongooseToPlain))
+}
+
 module.exports = {
     saveGame,
     editGame,
     findGameById,
     findNotNotifiedGamesCount,
+    findGamesByStatus,
     Game
 }
