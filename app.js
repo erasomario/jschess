@@ -2,7 +2,6 @@ const express = require('express')
 const app = express()
 const http = require('http')
 const https = require('https')
-const mongoose = require("mongoose")
 const path = require("path")
 const v1 = require("./api/v1.js")
 const v2 = require("./api/v2.js")
@@ -15,7 +14,7 @@ require('dotenv').config()
 
 if (!process.env.PROFILE_PICTURES_PATH) {
     throw Error("PROFILE_PICTURES_PATH should be defined")
-} else {    
+} else {
     if (!fs.existsSync(process.env.PROFILE_PICTURES_PATH)) {
         fs.mkdirSync(process.env.PROFILE_PICTURES_PATH, { recursive: true });
     }
@@ -42,29 +41,35 @@ if (process.env.SSL_CONF) {
 }
 
 const { Server } = require("socket.io")
+const { createMove, findGameById } = require('./model/game/game-logic.js')
 const io = new Server(server, { cors: {} })
 
-const mongooseParams = {
-    useNewUrlParser: true,
-    useFindAndModify: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true
-}
-
-if (process.env.MONGO_CONFIG) {
-    console.log("Mongo with custom settings")
-    const config = JSON.parse(process.env.MONGO_CONFIG)
-    mongoose.connect("mongodb://" + config.user + ":" + encodeURIComponent(config.password) + "@" + config.host, mongooseParams)
+if (process.env.DB === "mongoose") {
+    const mongoose = require("mongoose")
+    const mongooseParams = {
+        useNewUrlParser: true,
+        useFindAndModify: true,
+        useUnifiedTopology: true,
+        useCreateIndex: true
+    }
+    if (process.env.MONGO_CONFIG) {
+        console.log("Mongoose with custom settings")
+        const config = JSON.parse(process.env.MONGO_CONFIG)
+        mongoose.connect("mongodb://" + config.user + ":" + encodeURIComponent(config.password) + "@" + config.host, mongooseParams)
+    } else {
+        console.log("Mongoose with default settings")
+        mongoose.connect("mongodb://localhost:27017/jschess", mongooseParams);
+    }
+    const db = mongoose.connection;
+    db.on('error', console.error.bind(console, 'connection error:'))
+    db.once('open', function () {
+        console.log('Mongoose is working!')
+    })
+} else if (process.env.DB === "mongo") {
+    require("./utils/Mongo")
 } else {
-    console.log("Mongo with default settings")
-    mongoose.connect("mongodb://localhost:27017/jschess", mongooseParams);
+    throw Error("DB env var should be defined")
 }
-
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'))
-db.once('open', function () {
-    console.log('Mongoose is working!')
-})
 
 app.use(cors())
 app.use(fileUpload())
@@ -115,7 +120,15 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         disconnected(socket.handshake.query.id, socket)
     });
-});
+    socket.on('createMove', (req) => {
+        console.time("moveWhole")
+        const userId = socket.handshake.query.id
+        findGameById(req.gameId)
+            .then(game => createMove(game, userId, req.src, req.dest, req.piece, req.prom))
+            .catch(e => console.log(e.message))
+            .finally(() => console.timeEnd("moveWhole"))
+    })
+})
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
