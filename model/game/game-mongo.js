@@ -50,7 +50,19 @@ const findGamesByStatus = async (userId, status) => {
             result: { $exists: status !== 'open' }
         })
         .sort({ createdAt: -1 }).toArray()
-    return await Promise.all(lst.map(mongoToPlain))
+    return lst.map(mongoToPlain)
+}
+
+const findCurrentGames = async (userId) => {
+    const lst = await getCollection("games")
+        .find({
+            whiteId: { $ne: userId },
+            blackId: { $ne: userId },
+            result: { $exists: false }
+        })
+        .sort({ createdAt: -1 })
+        .limit(50).toArray()
+    return lst.map(mongoToPlain)
 }
 
 module.exports = {
@@ -58,5 +70,6 @@ module.exports = {
     editGame,
     findGameById,
     findNotNotifiedGamesCount,
-    findGamesByStatus
+    findGamesByStatus,
+    findCurrentGames
 }

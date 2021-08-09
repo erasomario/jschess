@@ -27,7 +27,8 @@ const gameSchema = Joi.object({
     addition: Joi.number(),
     requestedColor: Joi.string().valid('w', 'wb', 'd').required(),
     opponentNotified: Joi.boolean().default(false).required(),
-    drawOfferedBy: Joi.string().valid('w', 'b')
+    drawOfferedBy: Joi.string().valid('w', 'b'),
+    subscribers: Joi.array().items(Joi.string())
 })
 
 const makeGame = (obj) => {

@@ -37,6 +37,12 @@ const sendToGame = (game, event, payload) => {
         dest.push(game.blackId)
     }
     sendToList(dest, event, payload)
+    if (game.subscribers) {
+        //leaving a little gap so the players are informed before the subscribers
+        setTimeout(() => { 
+            sendToList(game.subscribers, event, payload)
+        }, 500)
+    }
 }
 
 const sendToUser = (userId, event, payload) => {

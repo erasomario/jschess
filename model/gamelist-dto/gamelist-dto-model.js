@@ -22,7 +22,6 @@ const gamelistDtoSchema = Joi.object({
 
 const makeGamelistDto = async game => {
     const obj = { ...game }
-
     if (!obj.whiteId) {
         obj.whiteName = "Robot"
         obj.whiteHasPicture = true
@@ -43,12 +42,7 @@ const makeGamelistDto = async game => {
         obj.blackName = black.username
         obj.blackHasPicture = black.hasPicture
     }
-
-    delete obj.requestedColor
-    delete obj.movs
-    delete obj.endType
-    obj.turn = game.movs.length
-    
+    obj.turn = game.movs.length    
     return validate(gamelistDtoSchema, obj)
 }
 

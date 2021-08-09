@@ -57,7 +57,7 @@ const createGame = async (userId, raw) => {
     }
 
     //letting know the other player that I'm inviting him to a game
-    if (obj.opponentId) {        
+    if (obj.opponentId) {
         sendNotNotifiedCount(obj.opponentId)
     }
     return savedGame
@@ -206,7 +206,7 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
             game.endType = "material"
         }
     }
-        
+
     await editGame(game)
     if ((game.movs.length % 2 === 0 && !game.whiteId) || (game.movs.length % 2 !== 0 && !game.blackId)) {
         setTimeout(async () => {
@@ -244,10 +244,26 @@ const setLabel = (mov, board, kingAttacked, possibleMoves) => {
     }
 }
 
+const undefinedAsNull = v => v === undefined ? null : v
+
+const getMyColor = (userId, game) => {
+    console.log("userId", userId)
+    console.log("whiteId", game.whiteId)
+    console.log("blackId", game.blackId)
+
+    if (undefinedAsNull(userId) === undefinedAsNull(game.whiteId)) {
+        return "w"
+    } else if (undefinedAsNull(userId) === undefinedAsNull(game.blackId)) {
+        return "b"
+    } else {
+        throw Error("You're not playing this game")
+    }
+}
+
 const setOpponentNotification = async (userId, gameId) => {
     const game = await findGameById(gameId)
     if (!game.opponentNotified) {
-        const myColor = game.whiteId === userId ? "w" : "b"
+        const myColor = getMyColor(userId, game)
         if (game.createdBy === myColor) {
             throw Error("you're not the opponent")
         }
@@ -263,8 +279,7 @@ const sendNotNotifiedCount = async userId => {
 
 const surrender = async (userId, gameId) => {
     const game = await gameSrc.findGameById(gameId)
-    const myColor = game.whiteId === userId ? "w" : "b"
-
+    const myColor = getMyColor(userId, game)
     if (game.result) {
         throw Error("You can't surrender on an already finished game")
     }
@@ -280,18 +295,19 @@ const surrender = async (userId, gameId) => {
 
 const offerDraw = async (userId, gameId) => {
     const game = await gameSrc.findGameById(gameId)
-    const myColor = game.whiteId === userId ? "w" : "b"
+    const myColor = getMyColor(userId, game)
     game.drawOfferedBy = myColor
     await editGame(game)
-    sendToUser(myColor === "w" ? game.blackId : game.whiteId, "drawOffered", game.id)
     if (myColor === "w" && !game.blackId || myColor === "b" && !game.whiteId) {
-        rejectDraw(null, gameId)
+        await rejectDraw(null, gameId)
+    } else {
+        sendToUser(myColor === "w" ? game.blackId : game.whiteId, "drawOffered", game.id)
     }
 }
 
 const acceptDraw = async (userId, gameId) => {
     const game = await gameSrc.findGameById(gameId)
-    const myColor = game.whiteId === userId ? "w" : "b"
+    const myColor = getMyColor(userId, game)
     if (!game.drawOfferedBy) {
         throw Error("there's not draw offering to accept")
     }
@@ -306,7 +322,7 @@ const acceptDraw = async (userId, gameId) => {
 
 const rejectDraw = async (userId, gameId) => {
     const game = await gameSrc.findGameById(gameId)
-    const myColor = game.whiteId === userId ? "w" : "b"
+    const myColor = getMyColor(userId, game)
     if (!game.drawOfferedBy) {
         throw Error("there's not draw offering to reject")
     }
@@ -318,12 +334,26 @@ const rejectDraw = async (userId, gameId) => {
     sendToUser(myColor === "w" ? game.blackId : game.whiteId, "drawRejected", game.id)
 }
 
+const createSubscriber = async (userId, gameId) => {
+    const game = await gameSrc.findGameById(gameId)
+    if (!game.subscribers) {
+        game.subscribers = []
+    }
+    if (!game.subscribers.includes(userId)) {
+        game.subscribers.push(userId)
+    }
+    editGame(game)
+    return game
+}
+
 module.exports = {
     createGame,
     createMove,
+    createSubscriber,
     editGame,
     findGameById,
     findGamesByStatus,
+    findCurrentGames: gameSrc.findCurrentGames,
     getElapsedTimes,
     setOpponentNotification,
     findNotNotifiedGamesCount: gameSrc.findNotNotifiedGamesCount,
