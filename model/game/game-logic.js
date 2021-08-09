@@ -1,5 +1,5 @@
 const Joi = require('joi')
-const gameSrc = require('../game/game-mongoose')
+const gameSrc = require('./game-mongo')
 const { sendToGame, sendToUser } = require('../../utils/Sockets')
 const { validate } = require('../../utils/Validation')
 const makeGameDto = require('../game-dto/game-dto-model')
@@ -8,11 +8,11 @@ const { generateBotMove } = require('../bot/bot')
 
 const findGameById = gameSrc.findGameById
 const editGame = gameSrc.editGame
+const findGamesByStatus = gameSrc.findGamesByStatus
 
 const botMove = async game => {
     const m = await generateBotMove(game)
     if (m) {
-        console.log(m)
         await createMove(game, m.userId, m.src, m.dest)
     }
 }
@@ -57,13 +57,7 @@ const createGame = async (userId, raw) => {
     }
 
     //letting know the other player that I'm inviting him to a game
-    if (obj.opponentId) {
-        /*const openCount = (await findGamelistDtoByStatus(obj.opponentId, "open")).length
-        if (openCount === 1) {
-            sendToUser(obj.opponentId, "openNewGame", await makeGameDto(savedGame))
-        } else {
-            sendToUser(obj.opponentId, "invitedToGame", await makeGameDto(savedGame))
-        }*/
+    if (obj.opponentId) {        
         sendNotNotifiedCount(obj.opponentId)
     }
     return savedGame
@@ -212,18 +206,18 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
             game.endType = "material"
         }
     }
-
-    const savedGame = await editGame(game)
-    if ((savedGame.movs.length % 2 === 0 && !savedGame.whiteId) || (savedGame.movs.length % 2 !== 0 && !game.blackId)) {
+        
+    await editGame(game)
+    if ((game.movs.length % 2 === 0 && !game.whiteId) || (game.movs.length % 2 !== 0 && !game.blackId)) {
         setTimeout(async () => {
             try {
-                await botMove(savedGame)
+                await botMove(game)
             } catch (e) {
                 console.log(e)
             }
         }, 1500)
     }
-    sendToGame(savedGame, "gameChanged", await makeGameDto(savedGame))
+    sendToGame(game, "gameChanged", await makeGameDto(game))
     return null
 }
 
@@ -329,6 +323,7 @@ module.exports = {
     createMove,
     editGame,
     findGameById,
+    findGamesByStatus,
     getElapsedTimes,
     setOpponentNotification,
     findNotNotifiedGamesCount: gameSrc.findNotNotifiedGamesCount,

@@ -1,6 +1,6 @@
 const express = require('express');
 const makeApiKey = require('../model/api-key/api-key-model');
-const { login, findUserById } = require('../model/user/user-controller');
+const { login, findUserById } = require('../model/user/user-logic');
 const router = express.Router();
 
 router.post("/", function (req, res, next) {

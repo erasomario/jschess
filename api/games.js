@@ -1,7 +1,7 @@
 const express = require("express");
 const Joi = require("joi");
 const makeGameDto = require("../model/game-dto/game-dto-model");
-const { createGame, createMove, findGameById, timeout, setOpponentNotification, offerDraw, surrender, rejectDraw, acceptDraw } = require("../model/game/game-controller");
+const { createGame, createMove, findGameById, timeout, setOpponentNotification, offerDraw, surrender, rejectDraw, acceptDraw } = require("../model/game/game-logic");
 const { validate } = require("../utils/Validation");
 
 var router = express.Router();

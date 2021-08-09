@@ -1,5 +1,5 @@
-const { decode } = require("../model/api-key/api-key-controller");
-const { findUserById } = require("../model/user/user-controller");
+const { decode } = require("../model/api-key/api-key-logic");
+const { findUserById } = require("../model/user/user-logic");
 
 const whiteList = [
     { path: new RegExp("^/api/v1/recovery_keys$"), method: "POST" },
@@ -23,8 +23,10 @@ var middleware = (req, res, next) => {
             findUserById(sess.id).then(usr => {
                 req.user = usr
                 next()
-            }).catch(e =>
+            }).catch(e => {
+                console.log(e)
                 res.status(500).end({ error: e.message })
+            }
             );
         }
     }

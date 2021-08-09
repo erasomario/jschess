@@ -4,7 +4,7 @@ const { validate } = require('../../utils/Validation')
 const makeApiKey = require('../api-key/api-key-model')
 const makeUserDto = require('../user-dto/user-dto-model')
 const makeUser = require('./user-model')
-const userSrc = require('./user-mongoose')
+const userSrc = require('./user-mongo')
 
 const addUser = async (raw) => {
     const usr = makeUser(raw)

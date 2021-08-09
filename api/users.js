@@ -10,17 +10,15 @@ const {
     editPassword,
     editEmail,
     editBoardOptions,
-} = require("../model/user/user-controller");
+} = require("../model/user/user-logic");
 
-const {
-    findGamelistDtoByStatus
-} = require("../model/gamelist-dto/gamelist-dto-controller")
 
 const fs = require("fs")
 const sharp = require('sharp');
 const path = require("path");
 const makeApiKey = require("../model/api-key/api-key-model");
-const { findNotNotifiedGamesCount } = require("../model/game/game-controller");
+const { findNotNotifiedGamesCount, findGamesByStatus } = require("../model/game/game-logic");
+const makeGamelistDto = require("../model/gamelist-dto/gamelist-dto-model");
 
 var router = express.Router();
 
@@ -153,8 +151,10 @@ router.get("/:id/games/:status", (req, res, next) => {
     if (req.params.id !== req.user.id) {
         res.status(403).end();
     }
-    findGamelistDtoByStatus(req.params.id, req.params.status)
-        .then(data => { res.json(data) })
+    findGamesByStatus(req.params.id, req.params.status)
+        .then(l => l.map(makeGamelistDto))
+        .then(data => Promise.all(data))
+        .then(data => res.json(data))
         .catch(next)
 })
 
