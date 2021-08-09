@@ -1,6 +1,6 @@
 const Joi = require('joi')
 const { validate } = require('../../utils/Validation')
-const { encode } = require('./api-key-controller')
+const { encode } = require('./api-key-logic')
 
 const schema = Joi.object({
     id: Joi.string().required(),
