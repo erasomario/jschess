@@ -246,11 +246,7 @@ const setLabel = (mov, board, kingAttacked, possibleMoves) => {
 
 const undefinedAsNull = v => v === undefined ? null : v
 
-const getMyColor = (userId, game) => {
-    console.log("userId", userId)
-    console.log("whiteId", game.whiteId)
-    console.log("blackId", game.blackId)
-
+const getMyColor = (userId, game) => {    
     if (undefinedAsNull(userId) === undefinedAsNull(game.whiteId)) {
         return "w"
     } else if (undefinedAsNull(userId) === undefinedAsNull(game.blackId)) {
