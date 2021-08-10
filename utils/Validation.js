@@ -9,7 +9,7 @@ const messages = {
         'string.max': '{{#label}} no debe tener más de  {{#limit}} caracteres',
     }
 };
-const validationOpts = { messages, errors: { language: 'ES' } }
+const validationOpts = { messages, errors: { language: 'ES' }, stripUnknown: true }
 
 const validate = (schema, obj) => {
     const { error, value } = schema.validate(obj, validationOpts)
