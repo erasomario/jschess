@@ -25,7 +25,7 @@ const gameSchema = Joi.object({
     movs: Joi.array().items(movSchema),
     time: Joi.number(),
     addition: Joi.number(),
-    requestedColor: Joi.string().valid('w', 'wb', 'd').required(),
+    requestedColor: Joi.string().valid('w', 'wb', 'b').required(),
     opponentNotified: Joi.boolean().default(false).required(),
     drawOfferedBy: Joi.string().valid('w', 'b'),
     subscribers: Joi.array().items(Joi.string())
