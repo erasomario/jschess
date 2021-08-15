@@ -246,7 +246,7 @@ const setLabel = (mov, board, kingAttacked, possibleMoves) => {
 
 const undefinedAsNull = v => v === undefined ? null : v
 
-const getMyColor = (userId, game) => {    
+const getMyColor = (userId, game) => {
     if (undefinedAsNull(userId) === undefinedAsNull(game.whiteId)) {
         return "w"
     } else if (undefinedAsNull(userId) === undefinedAsNull(game.blackId)) {
@@ -294,7 +294,7 @@ const offerDraw = async (userId, gameId) => {
     const myColor = getMyColor(userId, game)
     game.drawOfferedBy = myColor
     await editGame(game)
-    if (myColor === "w" && !game.blackId || myColor === "b" && !game.whiteId) {
+    if ((myColor === "w" && !game.blackId) || (myColor === "b" && !game.whiteId)) {
         await rejectDraw(null, gameId)
     } else {
         sendToUser(myColor === "w" ? game.blackId : game.whiteId, "drawOffered", game.id)
