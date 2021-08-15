@@ -28,7 +28,7 @@ const saveGame = async game => {
 const editGame = async game => {
     makeGame(game)
     const changes = cleanNull(game)
-    getGames().updateOne({ _id: ObjectId(game.id) }, { $set: changes })
+    await getGames().updateOne({ _id: ObjectId(game.id) }, { $set: changes })
     return game
 }
 

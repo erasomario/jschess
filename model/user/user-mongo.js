@@ -38,8 +38,8 @@ const findWithUserNameLike = async (like) => {
     if (like.length < 3) {
         throw Error('Debe escribir al menos 3 letras');
     }
-    return await getUsers().find({ username: new RegExp(like, "i") })
-        .toArray().map(u => mongoToPlain(u))
+    return (await getUsers().find({ username: new RegExp(like, "i") })
+        .toArray()).map(u => mongoToPlain(u))
 }
 
 const mongoToPlain = (obj) => {
