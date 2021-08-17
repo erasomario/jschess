@@ -10,7 +10,7 @@ var decode = (key) => {
     return sess;
 }
 
-var encode = (user) => {
+var encode = user => {
     var aesCtr = new aes.ModeOfOperation.ctr(aesKey, new aes.Counter(5));
     var textBytes = aes.utils.utf8.toBytes(JSON.stringify({ id: user.id, dt: new Date().getTime() }));
     return aes.utils.hex.fromBytes(aesCtr.encrypt(textBytes));

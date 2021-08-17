@@ -5,6 +5,7 @@ const whiteList = [
     { path: new RegExp("^/api/v1/recovery_keys$"), method: "POST" },
     { path: new RegExp("^/api/v1/users$"), method: "POST" },
     { path: new RegExp("^/api/v1/api_keys$"), method: "POST" },
+    { path: new RegExp("^/api/v1/api_keys/translation$"), method: "POST" },
     { path: new RegExp("^/api/v1/users/.+/password/recovery$"), method: "POST" },
 ]
 

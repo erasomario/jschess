@@ -14,6 +14,7 @@ const schema = Joi.object({
     createdAt: Joi.date(),
     hasPicture: Joi.boolean(),
     boardOpts: Joi.string(),
+    lang: Joi.string().valid("es", "en"),
     recoveryKey: recoveryKey
 })
 

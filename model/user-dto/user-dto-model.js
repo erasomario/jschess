@@ -5,10 +5,11 @@ const schema = Joi.object({
     id: Joi.string().required(),
     username: Joi.string().required(),
     hasPicture: Joi.boolean(),
+    lang: Joi.string().valid("es", "en")
 })
 
-const makeUserDto = ({ id, username, hasPicture }) => {
-    return validate(schema, { id, username, hasPicture })
+const makeUserDto = obj => {
+    return validate(schema, obj)
 }
 
 module.exports = makeUserDto

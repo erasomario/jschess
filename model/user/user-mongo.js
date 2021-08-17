@@ -23,7 +23,7 @@ const findUserById = async (id) => {
 const findUsersByAttr = async (attr, value) => {
     const query = {}
     query[attr] = value
-    return mongoToPlain(await getUsers().find(query))
+    return (await getUsers().find(query).toArray()).map(u => mongoToPlain(u))
 }
 
 const findByLogin = async (login) => {
@@ -42,11 +42,14 @@ const findWithUserNameLike = async (like) => {
         .toArray()).map(u => mongoToPlain(u))
 }
 
-const mongoToPlain = (obj) => {
-    obj.id = obj._id.toString()
-    delete obj._id
-    delete obj.__v
-    return makeUser(obj)
+const mongoToPlain = obj => {
+    if (obj) {
+        obj.id = obj._id.toString()
+        delete obj._id
+        delete obj.__v
+        return makeUser(obj)
+    }
+    return null
 }
 
 module.exports = {

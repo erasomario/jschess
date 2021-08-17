@@ -6,12 +6,12 @@ const schema = Joi.object({
     id: Joi.string().required(),
     username: Joi.string().required(),
     hasPicture: Joi.boolean().required(),
-    boardOpts: Joi.string()
+    boardOpts: Joi.string(),
+    lang: Joi.string()
 })
 
-const makeApiKey = ({ id, username, hasPicture, boardOpts }) => {
-    const value = validate(schema, { id, username, hasPicture, boardOpts })
-    return { api_key: encode(value), ...value }
+const makeApiKey = user => {
+    return { api_key: encode({ id: user.id }), ...validate(schema, user) }
 }
 
 module.exports = makeApiKey
