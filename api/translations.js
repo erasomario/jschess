@@ -1,15 +1,18 @@
 const express = require('express')
 const router = express.Router()
 const fs = require('fs')
-const {promises: {readFile}} = require("fs")
+const { promises: { readFile } } = require("fs")
 
-router.post("/translation/", async (req, res, next) => {
+router.post("/", async (req, res, next) => {
 
-    const esPath = 'C:\\Projects\\github\\jschess_react\\src\\locales\\es.json';
-    const enPath = 'C:\\Projects\\github\\jschess_react\\src\\locales\\en.json'
+    //const folder = "C:\\Projects\\github\\jschess_react\\src\\locales\\"
+    const folder = "C:\\Projects\\github\\chess\\locales\\"
 
-    const esLst = JSON.parse((await readFile(esPath)))
-    const enLst = JSON.parse((await readFile(enPath)))
+    const esPath = folder + "es.json"
+    const enPath = folder + "en.json"
+
+    const esLst = JSON.parse((await readFile(esPath)).toString())
+    const enLst = JSON.parse((await readFile(enPath)).toString())
 
     const key = req.body.key
     const esp = req.body.esp

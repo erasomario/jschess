@@ -26,11 +26,8 @@ const findUsersByAttr = async (attr, value) => {
     return (await getUsers().find(query).toArray()).map(u => mongoToPlain(u))
 }
 
-const findByLogin = async (login) => {
+const findByLogin = async login => {
     const u = await getUsers().findOne({ $or: [{ username: login }, { email: login }] })
-    if (!u) {
-        throw Error('Nombre de usuario o email incorrectos')
-    }
     return mongoToPlain(u)
 }
 

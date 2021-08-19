@@ -1,0 +1,15 @@
+{
+ "there's already a user with that name": "There's already a user with that name",
+ "there's already a user with that email": "There's already a user with that email",
+ "wrong username or email": "Check your username or email",
+ "wrong password": "Check your Password",
+ "mario's chess account recovery instructions": "Mario's Chess Account Recovery Instructions",
+ "username": "Username",
+ "recovery key": "Recovery Key",
+ "email hasn't changed": "Email hasn't changed",
+ "recovery key doesn't match": "Recovery Key doesn't match",
+ "recovery key expired, you should generate a new one": "Recovery key expired, you should generate a new one",
+ "you haven't started the account recovery yet": "You haven't started the account recovery yet",
+ "username hasn't changed": "Username hasn't changed",
+ "guest": "Guest"
+}

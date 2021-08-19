@@ -1,4 +1,5 @@
 const express = require('express')
+const i18n = require('i18next')
 const app = express()
 const http = require('http')
 const https = require('https')
@@ -11,6 +12,22 @@ const { middleware } = require('./middleware/authMiddleware.js')
 const fileUpload = require('express-fileupload')
 const fs = require('fs')
 require('dotenv').config()
+
+const en = require("./locales/en.json")
+const es = require("./locales/es.json")
+
+i18n
+    .init({
+        resources: {
+            en: { translation: en },
+            es: { translation: es },
+        },
+        debug: true,
+        interpolation: {
+            escapeValue: false,
+        }
+    })
+
 
 if (!process.env.PROFILE_PICTURES_PATH) {
     throw Error("PROFILE_PICTURES_PATH should be defined")

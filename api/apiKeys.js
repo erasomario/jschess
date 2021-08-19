@@ -6,9 +6,9 @@ const makeUserDto = require('../model/user-dto/user-dto-model');
 
 router.post("/", async function (req, res, next) {
     if (req.body.login && req.body.password) {
-        login(req.body.login, req.body.password)
+        login(req.body.login, req.body.password, req.body.lang)
             .then(key => res.json(key).end())
-            .catch(next)
+            .catch(e => setTimeout(() => next(e), 2000))
     } else {
         try {
             const guest = await addGuest(req.body.lang)

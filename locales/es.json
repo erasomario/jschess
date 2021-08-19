@@ -1,0 +1,15 @@
+{
+ "there's already a user with that name": "Ya existe un usuario con ese nombre",
+ "there's already a user with that email": "Ya existe un usuario con ese mail",
+ "wrong username or email": "Verifique su Nombre de usuario o email",
+ "wrong password": "Verifique su Contraseña",
+ "mario's chess account recovery instructions": "Instrucciones de Recuperación de cuenta de Mario's Chess",
+ "username": "Nombre de Usuario",
+ "recovery key": "Clave de Recuperación",
+ "email hasn't changed": "El email es igual al anterior",
+ "recovery key doesn't match": "La clave de recuperación no coincide",
+ "recovery key expired, you should generate a new one": "La clave expiró, debe generar una nueva",
+ "you haven't started the account recovery yet": "Aun no ha iniciado la recuperación de cuenta",
+ "username hasn't changed": "El nombre de usuario no ha cambiado",
+ "guest": "Invitado"
+}

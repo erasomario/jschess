@@ -6,11 +6,11 @@ const makeUserDto = require('../user-dto/user-dto-model')
 const makeUser = require('./user-model')
 const userSrc = require('./user-mongo')
 const nodemailer = require('nodemailer')
+const i18n = require('i18next')
 
 const addGuest = async lang => {
     const usr = {}
-    usr.username = "Guest" + ((await userSrc.findGuestCount()) + 1)
-    console.log(usr.username)
+    usr.username = i18n.getFixedT(lang)("guest") + ((await userSrc.findGuestCount()) + 1)
     usr.guest = true
     usr.hasPicture = false
     usr.lang = lang
@@ -20,14 +20,16 @@ const addGuest = async lang => {
 
 const addUser = async raw => {
     const usr = makeUser({ ...raw, guest: false })
+    const t = i18n.getFixedT(usr.lang)
     const lstName = await userSrc.findUsersByAttr('username', usr.username);
     if (lstName.length > 0) {
-        throw Error('Ya existe un usuario con ese nombre')
+        i18n.t()
+        throw Error(t("there's already a user with that name"))
     }
 
     const lstEmail = await userSrc.findUsersByAttr('email', usr.email)
     if (lstEmail.length > 0) {
-        throw Error('Ya existe un usuario con ese mail')
+        throw Error(t("there's already a user with that email"))
     }
     usr.password = hash(usr.password)
     usr.hasPicture = false
@@ -35,16 +37,20 @@ const addUser = async raw => {
     return savedUsr
 }
 
-const login = async (login, password) => {
+const login = async (login, password, lang) => {
+    const t = i18n.getFixedT(lang)
     validate(Joi.object({
         login: Joi.string().required().label('usuario o email'),
         password: Joi.string().required().label('contraseña')
     }), { login, password })
     const u = await userSrc.findByLogin(login)
+    if (!u) {
+        throw Error(t("wrong username or email"))
+    }
     if (compare(password, u.password)) {
         return makeApiKey(makeUserDto(u))
     } else {
-        throw Error('Contraseña incorrecta')
+        throw Error(t("wrong password"))
     }
 }
 
@@ -72,11 +78,12 @@ const createRecoveryPass = async (login) => {
         });
 
         // send email
+        const t = i18n.getFixedT(u.lang)
         await transporter.sendMail({
             from: smtpConf.from,
             to: u.email,
-            subject: "Mario's Chess Account Recovery Instructions",
-            html: `<b>Username:</b> ${u.username}<br/><b>Recovery Key:</b> ${key}`
+            subject: t("mario's chess account recovery instructions"),
+            html: `<b>${t("username")}:</b> ${u.username}<br/><b>${t("recovery key")}:</b> ${key}`
         })
     } else {
         throw Error("Mail sending is not yet configured")
@@ -86,21 +93,22 @@ const createRecoveryPass = async (login) => {
 }
 
 const editUsername = async (id, password, newUsername) => {
+    const user = await userSrc.findUserById(id)
     if (!newUsername) {
         throw Error('Debe indicar un nuevo nombre de usuario')
     } else if (!password) {
         throw Error('Debe indicar su contraseña actual')
     }
-    const user = await userSrc.findUserById(id)
+    const t = i18n.getFixedT(user.lang)
     if (!compare(password, user.password)) {
-        throw Error('La constraseña es incorrecta')
+        throw Error(t("wrong password"))
     }
     if (user.username === newUsername) {
-        throw Error('El nombre es igual al anterior')
+        throw Error(t("username hasn't changed"))
     }
     const usrs = await userSrc.findUsersByAttr('username', newUsername)
     if (usrs.length > 0) {
-        throw Error('Ya existe otro usuario con ese nombre')
+        throw Error(t("there's already a user with that name"))
     }
     user.username = newUsername
     return userSrc.editUser(makeUser(user))
@@ -125,20 +133,21 @@ const recoverPassword = async (userId, recoveryKey, newPass) => {
         newPass: Joi.string().label('nueva contraseña').required()
     }), { userId, recoveryKey, newPass })
 
-    const usr = await userSrc.findUserById(userId)
-    if (!usr.recoveryKey) {
-        throw Error('No es ha iniciado el proceso')
+    const user = await userSrc.findUserById(userId)
+    const t = i18n.getFixedT(user.lang)
+    if (!user.recoveryKey) {
+        throw Error(t("you haven't started the account recovery yet"))
     }
-    if (usr.recoveryKey.key !== recoveryKey) {
-        throw Error('La clave no coincide')
+    if (user.recoveryKey.key !== recoveryKey) {
+        throw Error(t("recovery key doesn't match"))
     }
-    if (((new Date() - usr.recoveryKey.createdAt) / 1000 / 60) > 30) {
-        throw Error('La clave expiró, debe generar una nuevo')
+    if (((new Date() - user.recoveryKey.createdAt) / 1000 / 60) > 30) {
+        throw Error(t("recovery key expired, you should generate a new one"))
     }
-    usr.password = newPass
-    makeUser(usr)
-    usr.password = hash(newPass)
-    return userSrc.editUser(usr)
+    user.password = newPass
+    makeUser(user)
+    user.password = hash(newPass)
+    return userSrc.editUser(user)
 }
 
 const editPassword = async (id, password, newPassword) => {
@@ -148,11 +157,9 @@ const editPassword = async (id, password, newPassword) => {
         throw Error('Debe indicar su contraseña actual')
     }
     const user = await userSrc.findUserById(id)
+    const t = i18n.getFixedT(user.lang)
     if (!compare(password, user.password)) {
-        throw Error('La constraseña es incorrecta')
-    }
-    if (user.password === newPassword) {
-        throw Error('La contraseña es igual a la anterior')
+        throw Error(t("wrong password"))
     }
     user.password = newPassword
     makeUser(user)
@@ -161,21 +168,22 @@ const editPassword = async (id, password, newPassword) => {
 }
 
 const editEmail = async (id, password, newEmail) => {
+    const user = await userSrc.findUserById(id)
     if (!newEmail) {
         throw Error('Debe indicar un nuevo email')
     } else if (!password) {
         throw Error('Debe indicar su contraseña actual')
     }
-    const user = await userSrc.findUserById(id)
+    const t = i18n.getFixedT(user.lang)
     if (!compare(password, user.password)) {
-        throw Error('La constraseña es incorrecta')
+        throw Error(t("wrong password"))
     }
     if (user.email === newEmail) {
-        throw Error('El email es igual al anterior')
+        throw Error(t("email hasn't changed"))
     }
     const usrs = await userSrc.findUsersByAttr('email', newEmail)
     if (usrs.length > 0) {
-        throw Error('Ya existe otro usuario con ese email')
+        throw Error(t("there's already a user with that email"))
     }
     user.email = newEmail
     return userSrc.editUser(makeUser(user))
