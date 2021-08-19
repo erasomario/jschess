@@ -12,7 +12,7 @@ const saveUser = async usr => {
 const editUser = async user => {
     makeUser(user)
     const changes = cleanNull(user)
-    getUsers().updateOne({ _id: ObjectId(user.id) }, { $set: changes })
+    await getUsers().updateOne({ _id: ObjectId(user.id) }, { $set: changes })
     return user
 }
 
@@ -42,6 +42,10 @@ const findWithUserNameLike = async (like) => {
         .toArray()).map(u => mongoToPlain(u))
 }
 
+const findGuestCount = async () => {
+    return (await getUsers().find({ guest: true }).count())
+}
+
 const mongoToPlain = obj => {
     if (obj) {
         obj.id = obj._id.toString()
@@ -58,5 +62,6 @@ module.exports = {
     findUserById,
     findUsersByAttr,
     findByLogin,
-    findWithUserNameLike
+    findWithUserNameLike,
+    findGuestCount
 }

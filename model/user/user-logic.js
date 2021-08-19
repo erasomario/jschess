@@ -5,9 +5,22 @@ const makeApiKey = require('../api-key/api-key-model')
 const makeUserDto = require('../user-dto/user-dto-model')
 const makeUser = require('./user-model')
 const userSrc = require('./user-mongo')
+const nodemailer = require('nodemailer')
+const { json } = require('express')
 
-const addUser = async (raw) => {
-    const usr = makeUser(raw)
+const addGuest = async lang => {
+    const usr = {}
+    usr.username = "Guest" + ((await userSrc.findGuestCount()) + 1)
+    console.log(usr.username)
+    usr.guest = true
+    usr.hasPicture = false
+    usr.lang = lang
+    const savedUsr = await userSrc.saveUser(usr)
+    return savedUsr
+}
+
+const addUser = async raw => {
+    const usr = makeUser({ ...raw, guest: false })
     const lstName = await userSrc.findUsersByAttr('username', usr.username);
     if (lstName.length > 0) {
         throw Error('Ya existe un usuario con ese nombre')
@@ -45,6 +58,31 @@ const createRecoveryPass = async (login) => {
     const sUsr = await userSrc.editUser(u)
     const obscure = (str_1) => [...str_1].reduce((t_1, a, i, arr) => t_1 + (i >= parseInt(arr.length * 0.3) && i <= parseInt(arr.length * 0.6) ? '*' : a), '')
     let parts = sUsr.email.split('@')
+
+    if (process.env.SMTP_CONF) {
+        const smtpConf = JSON.parse(process.env.SMTP_CONF)
+        console.log(smtpConf)
+        const transporter = nodemailer.createTransport({
+            host: smtpConf.host,
+            port: smtpConf.port,
+            secure: smtpConf.secure,
+            auth: {
+                user: smtpConf.username,
+                pass: smtpConf.password,
+            }
+        });
+
+        // send email
+        await transporter.sendMail({
+            from: smtpConf.from,
+            to: u.email,
+            subject: "Mario's Chess Account Recovery Instructions",
+            html: `<b>Username:</b> ${u.username}<br/><b>Recovery Key:</b> ${key}`
+        })
+    } else {
+        throw Error("Mail sending is not yet configured")
+    }
+
     return { id: sUsr.id, mail: `${obscure(parts[0])}@${obscure(parts[1])}`, keyLenght }
 }
 
@@ -69,7 +107,13 @@ const editUsername = async (id, password, newUsername) => {
     return userSrc.editUser(makeUser(user))
 }
 
-const editBoardOptions = async (id, opts) => {    
+const editLang = async (id, lang) => {
+    const user = await userSrc.findUserById(id)
+    user.lang = lang
+    return userSrc.editUser(makeUser(user))
+}
+
+const editBoardOptions = async (id, opts) => {
     const user = await userSrc.findUserById(id)
     user.boardOpts = JSON.stringify(opts)
     return userSrc.editUser(makeUser(user))
@@ -87,10 +131,10 @@ const recoverPassword = async (userId, recoveryKey, newPass) => {
         throw Error('No es ha iniciado el proceso')
     }
     if (usr.recoveryKey.key !== recoveryKey) {
-        throw Error('El código no coincide')
+        throw Error('La clave no coincide')
     }
     if (((new Date() - usr.recoveryKey.createdAt) / 1000 / 60) > 30) {
-        throw Error('El código expiró, debe generar uno nuevo')
+        throw Error('La clave expiró, debe generar una nuevo')
     }
     usr.password = newPass
     makeUser(usr)
@@ -155,10 +199,12 @@ module.exports = {
     createRecoveryPass,
     recoverPassword,
     addUser,
+    addGuest,
     editUser,
     editUsername,
     editPassword,
     editEmail,
+    editLang,
     editBoardOptions,
     findUserById,
     findWithUserNameLike
