@@ -10,6 +10,7 @@ const {
     editPassword,
     editEmail,
     editBoardOptions,
+    editLang,
 } = require("../model/user/user-logic");
 
 
@@ -93,19 +94,31 @@ router.put("/:id/picture", async (req, res, next) => {
 
 router.put("/:id/username", (req, res, next) => {
     if (req.user.id === req.params.id) {
-        editUsername(req.user.id, req.body.password, req.body.newUsername).then(user => {
-            res.json(makeUserDto(user))
-        }).catch(next)
+        editUsername(req.user.id, req.body.password, req.body.newUsername)
+            .then(user => {
+                res.json(makeUserDto(user))
+            }).catch(next)
     } else {
         res.status(403).end();
     }
 })
 
+router.put("/:id/lang", (req, res, next) => {
+    if (req.user.id === req.params.id) {
+        editLang(req.user.id, req.body.lang)
+            .then(user => res.json(makeUserDto(user)))
+            .catch(next)
+    } else {
+        res.status(403).end();
+    }
+})
+
+
 router.put("/:id/boardOptions", (req, res, next) => {
     if (req.user.id === req.params.id) {
-        editBoardOptions(req.user.id, req.body).then(user => {
-            res.json(makeUserDto(user))
-        }).catch(next)
+        editBoardOptions(req.user.id, req.body)
+            .then(user => res.json(makeUserDto(user)))
+            .catch(next)
     } else {
         res.status(403).end();
     }
@@ -123,9 +136,9 @@ router.get("/:id/notNotifiedGamesCount", (req, res, next) => {
 
 router.put("/:id/password", (req, res, next) => {
     if (req.user.id === req.params.id) {
-        editPassword(req.user.id, req.body.password, req.body.newPassword).then(user => {
-            res.json(makeUserDto(user))
-        }).catch(next)
+        editPassword(req.user.id, req.body.password, req.body.newPassword)
+            .then(user => res.json(makeUserDto(user)))
+            .catch(next)
     } else {
         res.status(403).end();
     }
@@ -133,15 +146,15 @@ router.put("/:id/password", (req, res, next) => {
 
 router.post('/:id/password/recovery', (req, res, next) => {
     recoverPassword(req.params.id, req.body.recoveryKey, req.body.password)
-        .then(res.status(200).end())
+        .then(() => res.status(200).end())
         .catch(next)
 });
 
 router.put("/:id/email", (req, res, next) => {
     if (req.user.id === req.params.id) {
-        editEmail(req.user.id, req.body.password, req.body.newEmail).then(user => {
-            res.json(makeUserDto(user))
-        }).catch(next)
+        editEmail(req.user.id, req.body.password, req.body.newEmail)
+            .then(user => res.json(makeUserDto(user)))
+            .catch(next)
     } else {
         res.status(403).end()
     }
