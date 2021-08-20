@@ -11,5 +11,18 @@
  "recovery key expired, you should generate a new one": "Recovery key expired, you should generate a new one",
  "you haven't started the account recovery yet": "You haven't started the account recovery yet",
  "username hasn't changed": "Username hasn't changed",
- "guest": "Guest"
+ "guest": "Guest",
+ "you should write your username or email": "You should write your username or email",
+ "you should write your password": "You should write your password",
+ "you should write an email": "You should write an email",
+ "'{{email}}' is no a valid email": "'{{email}}' is no a valid email",
+ "you should write a username": "You should write a username",
+ "username should only contain numbers letters and hyphens": "Username should only contain numbers letters and hyphens",
+ "password should contain at least one letter": "Password should contain at least one letter",
+ "password should contain at least one number": "Password should contain at least one number",
+ "you should write a password": "You should write a password",
+ "username should be at least {{min}} characters long": "Username should be at least {{min}} characters long",
+ "username shouldn't be more than {{max}} characters long": "Username shouldn't be more than {{max}} characters long",
+ "password should be at least {{min}} characters long": "Password should be at least {{min}} characters long",
+ "password shouldn't be more than {{max}} characters long": "Password shouldn't be more than {{max}} characters long"
 }

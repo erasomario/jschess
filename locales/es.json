@@ -11,5 +11,18 @@
  "recovery key expired, you should generate a new one": "La clave expiró, debe generar una nueva",
  "you haven't started the account recovery yet": "Aun no ha iniciado la recuperación de cuenta",
  "username hasn't changed": "El nombre de usuario no ha cambiado",
- "guest": "Invitado"
+ "guest": "Invitado",
+ "you should write your username or email": "Debe escribir su nombre de usuario o email",
+ "you should write your password": "Debe escribir su contraseña",
+ "you should write an email": "Debe escribir un email",
+ "'{{email}}' is no a valid email": "'{{email}}' no es un correo válido",
+ "you should write a username": "Debe escribir un nombre de usuario", 
+ "username should only contain numbers letters and hyphens": "El nombre de usuario solo debe tener números, letras y guiones",
+ "password should contain at least a letter": "La contraseña debe tener al menos una letra",
+ "password should contain at least a number": "La contraseña debe tener al menos un número",
+ "you should write a password": "Debe escribir una contraseña",
+ "username should be at least {{min}} characters long": "El nombre de usuario debe tener al menos {{min}} caracteres",
+ "username shouldn't be more than {{max}} characters long": "El nombre de usuario no debe tener más de {{max}} caracteres",
+ "password should be at least {{min}} characters long": "La contraseña debe tener al menos {{min}} caracteres",
+ "password shouldn't be more than {{max}} characters long": "La contraseña no debe tener más de {{max}} caracteres"
 }

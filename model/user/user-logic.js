@@ -1,6 +1,4 @@
-const Joi = require('joi')
 const { hash, compare } = require('../../utils/Crypt')
-const { validate } = require('../../utils/Validation')
 const makeApiKey = require('../api-key/api-key-model')
 const makeUserDto = require('../user-dto/user-dto-model')
 const makeUser = require('./user-model')
@@ -14,13 +12,61 @@ const addGuest = async lang => {
     usr.guest = true
     usr.hasPicture = false
     usr.lang = lang
-    const savedUsr = await userSrc.saveUser(usr)
-    return savedUsr
+    return await userSrc.saveUser(usr)
+}
+
+const validateEmail = (email, t) => {
+    if (!email) {
+        throw Error(t("you should write an email"))
+    }
+    const res = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    if (!res.test(String(email).toLowerCase())) {
+        throw Error(t("'{{email}}' is no a valid email", { email }))
+    }
+}
+
+const validateUserName = (username, t) => {
+    if (!username) {
+        throw Error(t("you should write a username"))
+    }
+    if (username.length < 6) {
+        throw Error(t("username should be at least {{min}} characters long", { min: 6 }))
+    }
+
+    if (username.length > 24) {
+        throw Error(t("username should be more than {{max}} characters long", { max: 24 }))
+    }
+
+    const res = /^[A-za-z0-9\-_]+$/
+    if (!res.test(String(username).toLowerCase())) {
+        throw Error(t("username should only contain numbers letters and hyphens"))
+    }
+}
+
+const validatePassword = (pass, t) => {
+    if (!pass) {
+        throw Error(t("you should write a password"))
+    }
+    if (pass.length < 6) {
+        throw Error(t("password should be at least {{min}} characters long", { min: 6 }))
+    }
+    if (pass.length > 24) {
+        throw Error(t("password should be more than {{max}} characters long", { max: 24 }))
+    }
+    if (/^[^A-Za-z]*$/.test(pass)) {
+        throw Error(t("password should contain at least one letter"))
+    }
+    if (/^[^0-9]*$/.test(pass)) {
+        throw Error(t("password should contain at least one number"))
+    }
 }
 
 const addUser = async raw => {
+    const t = i18n.getFixedT(raw.lang)
+    validateEmail(raw.email, t)
+    validateUserName(raw.username, t)
+    validatePassword(raw.password, t)
     const usr = makeUser({ ...raw, guest: false })
-    const t = i18n.getFixedT(usr.lang)
     const lstName = await userSrc.findUsersByAttr('username', usr.username);
     if (lstName.length > 0) {
         i18n.t()
@@ -39,10 +85,11 @@ const addUser = async raw => {
 
 const login = async (login, password, lang) => {
     const t = i18n.getFixedT(lang)
-    validate(Joi.object({
-        login: Joi.string().required().label('usuario o email'),
-        password: Joi.string().required().label('contraseña')
-    }), { login, password })
+    if (!login) {
+        throw Error(t("you should write your username or email"))
+    } else if (!password) {
+        throw Error(t("you should write your password"))
+    }
     const u = await userSrc.findByLogin(login)
     if (!u) {
         throw Error(t("wrong username or email"))
@@ -54,9 +101,16 @@ const login = async (login, password, lang) => {
     }
 }
 
-const createRecoveryPass = async (login) => {
+const createRecoveryPass = async (login, lang) => {
     const keyLenght = 7;
     const u = await userSrc.findByLogin(login)
+    if (!login) {
+        throw Error("you should write a username or email")
+    }
+    if (!u) {
+        const t = i18n.getFixedT(lang)
+        throw Error(t("wrong username or email"))
+    }
     const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
     const key = ([...Array(keyLenght)]).reduce((t) => t + letters[parseInt(Math.random() * letters.length)], '')
     u.recoveryKey = { key: key, createdAt: Date.now() }
@@ -66,7 +120,6 @@ const createRecoveryPass = async (login) => {
 
     if (process.env.SMTP_CONF) {
         const smtpConf = JSON.parse(process.env.SMTP_CONF)
-        console.log(smtpConf)
         const transporter = nodemailer.createTransport({
             host: smtpConf.host,
             port: smtpConf.port,
@@ -94,18 +147,19 @@ const createRecoveryPass = async (login) => {
 
 const editUsername = async (id, password, newUsername) => {
     const user = await userSrc.findUserById(id)
+    const t = i18n.getFixedT(user.lang)
     if (!newUsername) {
         throw Error('Debe indicar un nuevo nombre de usuario')
     } else if (!password) {
-        throw Error('Debe indicar su contraseña actual')
+        throw Error(t("you should write your password"))
     }
-    const t = i18n.getFixedT(user.lang)
     if (!compare(password, user.password)) {
         throw Error(t("wrong password"))
     }
     if (user.username === newUsername) {
         throw Error(t("username hasn't changed"))
     }
+    validateUserName(newUsername, t)
     const usrs = await userSrc.findUsersByAttr('username', newUsername)
     if (usrs.length > 0) {
         throw Error(t("there's already a user with that name"))
@@ -127,14 +181,9 @@ const editBoardOptions = async (id, opts) => {
 }
 
 const recoverPassword = async (userId, recoveryKey, newPass) => {
-    validate(Joi.object({
-        userId: Joi.string().label('id del usuario').required(),
-        recoveryKey: Joi.string().label('clave de recuperación').required(),
-        newPass: Joi.string().label('nueva contraseña').required()
-    }), { userId, recoveryKey, newPass })
-
     const user = await userSrc.findUserById(userId)
-    const t = i18n.getFixedT(user.lang)
+    const t = i18n.getFixedT(user.lang)    
+    validatePassword(newPass, t)
     if (!user.recoveryKey) {
         throw Error(t("you haven't started the account recovery yet"))
     }
@@ -151,16 +200,17 @@ const recoverPassword = async (userId, recoveryKey, newPass) => {
 }
 
 const editPassword = async (id, password, newPassword) => {
+    const user = await userSrc.findUserById(id)
+    const t = i18n.getFixedT(user.lang)
     if (!newPassword) {
         throw Error('Debe indicar una nueva contraseña')
     } else if (!password) {
-        throw Error('Debe indicar su contraseña actual')
+        throw Error(t("you should write your password"))
     }
-    const user = await userSrc.findUserById(id)
-    const t = i18n.getFixedT(user.lang)
     if (!compare(password, user.password)) {
         throw Error(t("wrong password"))
     }
+    validatePassword(password, t)
     user.password = newPassword
     makeUser(user)
     user.password = hash(user.password)
@@ -169,18 +219,19 @@ const editPassword = async (id, password, newPassword) => {
 
 const editEmail = async (id, password, newEmail) => {
     const user = await userSrc.findUserById(id)
-    if (!newEmail) {
-        throw Error('Debe indicar un nuevo email')
-    } else if (!password) {
-        throw Error('Debe indicar su contraseña actual')
-    }
     const t = i18n.getFixedT(user.lang)
+    if (!newEmail) {
+        throw Error(t("you should write an email"))
+    } else if (!password) {
+        throw Error(t("you should write your password"))
+    }
     if (!compare(password, user.password)) {
         throw Error(t("wrong password"))
     }
     if (user.email === newEmail) {
         throw Error(t("email hasn't changed"))
     }
+    validateEmail(newEmail)
     const usrs = await userSrc.findUsersByAttr('email', newEmail)
     if (usrs.length > 0) {
         throw Error(t("there's already a user with that email"))
@@ -189,11 +240,11 @@ const editEmail = async (id, password, newEmail) => {
     return userSrc.editUser(makeUser(user))
 }
 
-const findUserById = (id) => {
+const findUserById = id => {
     return userSrc.findUserById(id)
 }
 
-const editUser = (usr) => {
+const editUser = usr => {
     return userSrc.editUser(usr)
 }
 
