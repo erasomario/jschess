@@ -5,6 +5,8 @@ const { validate } = require('../../utils/Validation')
 const makeGameDto = require('../game-dto/game-dto-model')
 const { getAllAttackedByMe, getBoard, getAttacked, includes, getCastling, isKingAttacked, checkEnoughMaterial } = require("../../utils/Chess")
 const { generateBotMove } = require('../bot/bot')
+const { findUserById } = require('../user/user-mongo')
+const { default: i18next } = require('i18next')
 
 const findGameById = gameSrc.findGameById
 const editGame = gameSrc.editGame
@@ -111,14 +113,16 @@ const timeout = async id => {
 }
 
 const createMove = async (game, playerId, src, dest, piece, prom) => {
+    const t = i18next.getFixedT((await findUserById(playerId)).lang)
+
     if (game.result) {
-        throw Error("Game is over")
+        throw Error(t("game is over"))
     }
     const myColor = playerId === game.whiteId ? "w" : "b"
     const myTurn = myColor === "w" ? game.movs.length % 2 === 0 : game.movs.length % 2 !== 0
 
     if (!myTurn) {
-        throw Error("No es su turno para mover")
+        throw Error(t("it's not your turn to move"))
     }
 
     const board = getBoard(game.movs, game.movs.length)
@@ -126,17 +130,17 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
     const tiles = board.inGameTiles
 
     if (!tiles[src[1]][src[0]]) {
-        throw Error("Empty source")
+        throw Error(t("source square is empty"))
     }
     if (piece) {
         if (tiles[src[1]][src[0]] !== piece) {
-            throw Error(`Not the same piece ${tiles[src[1]][src[0]]} ${piece}`)
+            throw Error(t("piece is not at the designated origin square"))
         }
     } else {
         piece = tiles[src[1]][src[0]]
     }
     if (piece.slice(0, 1) !== myColor) {
-        throw Error("That piece is not yours")
+        throw Error(t("you're trying to move a piece that's not yours"))
     }
 
     if (includes(getCastling(tiles, touched, myColor, src[0], src[1]), dest[0], dest[1])) {
@@ -147,7 +151,7 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
         }
         const attacked = getAttacked(tiles, touched, myColor, src[0], src[1])
         if (!includes(attacked, dest[0], dest[1])) {
-            throw Error("Destination can't be reached")
+            throw Error(t("you can't move the piece to that square"))
         }
         let pieces = 0
         tiles.forEach(row => row.forEach(p => {
@@ -159,7 +163,7 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
     } else {
         const attacked = getAttacked(tiles, touched, myColor, src[0], src[1])
         if (!includes(attacked, dest[0], dest[1])) {
-            throw Error("Destination can't be reached")
+            throw Error(t("you can't move the piece to that square"))
         }
         game.movs.push({ sCol: src[0], sRow: src[1], dCol: dest[0], dRow: dest[1] })
     }
@@ -246,22 +250,23 @@ const setLabel = (mov, board, kingAttacked, possibleMoves) => {
 
 const undefinedAsNull = v => v === undefined ? null : v
 
-const getMyColor = (userId, game) => {
+const getMyColor = (userId, game, t) => {
     if (undefinedAsNull(userId) === undefinedAsNull(game.whiteId)) {
         return "w"
     } else if (undefinedAsNull(userId) === undefinedAsNull(game.blackId)) {
         return "b"
     } else {
-        throw Error("You're not playing this game")
+        throw Error(t("you're not playing this game"))
     }
 }
 
 const setOpponentNotification = async (userId, gameId) => {
     const game = await findGameById(gameId)
+    const t = i18next.getFixedT((await findUserById(userId)).lang)
     if (!game.opponentNotified) {
-        const myColor = getMyColor(userId, game)
+        const myColor = getMyColor(userId, game, t)
         if (game.createdBy === myColor) {
-            throw Error("you're not the opponent")
+            throw Error(t("you're not the opponent on this game"))
         }
         game.opponentNotified = true
         await gameSrc.editGame(game)
@@ -274,14 +279,15 @@ const sendNotNotifiedCount = async userId => {
 }
 
 const surrender = async (userId, gameId) => {
+    const t = i18next.getFixedT((await findUserById(userId)).lang)
     const game = await gameSrc.findGameById(gameId)
-    const myColor = getMyColor(userId, game)
+    const myColor = getMyColor(userId, game, t)
     if (game.result) {
-        throw Error("You can't surrender on an already finished game")
+        throw Error(t("game is over"))
     }
 
     if (game.movs.length < 2) {
-        throw Error("You can't surrender on a game that hasn't started yet")
+        throw Error(t("this game that hasn't started yet"))
     }
     game.result = (myColor === "w" ? "b" : "w")
     game.endType = "surrender"
@@ -290,8 +296,12 @@ const surrender = async (userId, gameId) => {
 }
 
 const offerDraw = async (userId, gameId) => {
+    const t = i18next.getFixedT((await findUserById(userId)).lang)
     const game = await gameSrc.findGameById(gameId)
-    const myColor = getMyColor(userId, game)
+    const myColor = getMyColor(userId, game, t)
+    if (game.movs.length < 2) {
+        throw Error(t("this game that hasn't started yet"))
+    }
     game.drawOfferedBy = myColor
     await editGame(game)
     if ((myColor === "w" && !game.blackId) || (myColor === "b" && !game.whiteId)) {
@@ -302,13 +312,14 @@ const offerDraw = async (userId, gameId) => {
 }
 
 const acceptDraw = async (userId, gameId) => {
+    const t = i18next.getFixedT((await findUserById(userId)).lang)
     const game = await gameSrc.findGameById(gameId)
-    const myColor = getMyColor(userId, game)
+    const myColor = getMyColor(userId, game, t)
     if (!game.drawOfferedBy) {
-        throw Error("there's not draw offering to accept")
+        throw Error(t("there's not draw offering to accept"))
     }
     if (game.drawOfferedBy === myColor) {
-        throw Error("you cannot accept a draw offered by yourself")
+        throw Error(t("you cannot accept or reject this draw offering"))
     }
     game.result = "d"
     game.endType = "agreed"
@@ -317,13 +328,14 @@ const acceptDraw = async (userId, gameId) => {
 }
 
 const rejectDraw = async (userId, gameId) => {
+    const t = i18next.getFixedT((await findUserById(userId)).lang)
     const game = await gameSrc.findGameById(gameId)
-    const myColor = getMyColor(userId, game)
+    const myColor = getMyColor(userId, game, t)
     if (!game.drawOfferedBy) {
-        throw Error("there's not draw offering to reject")
+        throw Error(t("there's not draw offering to reject"))
     }
     if (game.drawOfferedBy === myColor) {
-        throw Error("you cannot reject a draw offered by yourself")
+        throw Error(t("you cannot accept or reject this draw offering"))
     }
     game.drawOfferedBy = undefined
     await editGame(game)

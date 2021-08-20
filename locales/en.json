@@ -24,5 +24,17 @@
  "username should be at least {{min}} characters long": "Username should be at least {{min}} characters long",
  "username shouldn't be more than {{max}} characters long": "Username shouldn't be more than {{max}} characters long",
  "password should be at least {{min}} characters long": "Password should be at least {{min}} characters long",
- "password shouldn't be more than {{max}} characters long": "Password shouldn't be more than {{max}} characters long"
+ "password shouldn't be more than {{max}} characters long": "Password shouldn't be more than {{max}} characters long",
+ "game is over": "Game is over",
+ "it's not your turn to move": "It's not your turn to move",
+ "source square is empty": "Source square is empty",
+ "piece is not at the designated origin square": "Piece is not at the designated origin square",
+ "you're trying to move a piece that's not yours": "You're trying to move a piece that's not yours",
+ "you can't move the piece to that square": "You can't move the piece to that square",
+ "you're not playing this game": "You're not playing this game",
+ "you're not the opponent on this game": "You're not the opponent on this game",
+ "this game that hasn't started yet": "This game that hasn't started yet",
+ "there's not draw offering to accept": "There's not draw offering to accept",
+ "there's not draw offering to reject": "There's not draw offering to reject",
+ "you cannot accept or reject this draw offering": "You cannot accept or reject this draw offering"
 }
