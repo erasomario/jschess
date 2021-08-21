@@ -61,26 +61,33 @@ const validatePassword = (pass, t) => {
     }
 }
 
-const addUser = async raw => {
+const addUser = async (raw, guestId) => {
     const t = i18n.getFixedT(raw.lang)
     validateEmail(raw.email, t)
     validateUserName(raw.username, t)
     validatePassword(raw.password, t)
-    const usr = makeUser({ ...raw, guest: false })
-    const lstName = await userSrc.findUsersByAttr('username', usr.username);
+
+    const lstName = await userSrc.findUsersByAttr('username', raw.username);
     if (lstName.length > 0) {
-        i18n.t()
         throw Error(t("there's already a user with that name"))
     }
 
-    const lstEmail = await userSrc.findUsersByAttr('email', usr.email)
+    const lstEmail = await userSrc.findUsersByAttr('email', raw.email)
     if (lstEmail.length > 0) {
         throw Error(t("there's already a user with that email"))
     }
-    usr.password = hash(usr.password)
-    usr.hasPicture = false
-    const savedUsr = await userSrc.saveUser(usr)
-    return savedUsr
+
+    if (guestId) {
+        const usr = makeUser({ ...(await findUserById(guestId)), ...raw })
+        usr.guest = false
+        usr.password = hash(usr.password)
+        return (await userSrc.editUser(usr))
+    } else {
+        const usr = makeUser({ ...raw, guest: false })
+        usr.password = hash(usr.password)
+        usr.hasPicture = false
+        return (await userSrc.saveUser(usr))
+    }
 }
 
 const login = async (login, password, lang) => {
@@ -182,7 +189,7 @@ const editBoardOptions = async (id, opts) => {
 
 const recoverPassword = async (userId, recoveryKey, newPass) => {
     const user = await userSrc.findUserById(userId)
-    const t = i18n.getFixedT(user.lang)    
+    const t = i18n.getFixedT(user.lang)
     validatePassword(newPass, t)
     if (!user.recoveryKey) {
         throw Error(t("you haven't started the account recovery yet"))

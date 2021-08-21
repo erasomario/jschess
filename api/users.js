@@ -24,7 +24,7 @@ const makeGamelistDto = require("../model/gamelist-dto/gamelist-dto-model");
 var router = express.Router();
 
 router.post("/", function (req, res, next) {
-    addUser(req.body).then(user =>
+    addUser(req.body, req.body.guestId).then(user =>
         res.status(200).json(makeApiKey(makeUserDto(user)))
     ).catch(next)
 })

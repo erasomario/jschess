@@ -5,7 +5,8 @@ const schema = Joi.object({
     id: Joi.string().required(),
     username: Joi.string().required(),
     hasPicture: Joi.boolean(),
-    lang: Joi.string().valid("es", "en")
+    lang: Joi.string().valid("es", "en"),
+    guest: Joi.boolean().required()
 })
 
 const makeUserDto = obj => {
