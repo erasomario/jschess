@@ -5,10 +5,11 @@ const makeUser = require('./user-model')
 const userSrc = require('./user-mongo')
 const nodemailer = require('nodemailer')
 const i18n = require('i18next')
+const { getNext } = require('../sequence/sequence-logic')
 
 const addGuest = async lang => {
     const usr = {}
-    usr.username = i18n.getFixedT(lang)("guest") + ((await userSrc.findGuestCount()) + 1)
+    usr.username = i18n.getFixedT(lang)("guest") + (await getNext("guest"))
     usr.guest = true
     usr.hasPicture = false
     usr.lang = lang
