@@ -6,7 +6,7 @@ const makeGameDto = require('../game-dto/game-dto-model')
 const { getAllAttackedByMe, getBoard, getAttacked, includes, getCastling, isKingAttacked, checkEnoughMaterial } = require("../../utils/Chess")
 const { generateBotMove } = require('../bot/bot')
 const { findUserById } = require('../user/user-mongo')
-const { default: i18next } = require('i18next')
+const i18n = require('i18next')
 
 const findGameById = gameSrc.findGameById
 const editGame = gameSrc.editGame
@@ -113,7 +113,7 @@ const timeout = async id => {
 }
 
 const createMove = async (game, playerId, src, dest, piece, prom) => {
-    const t = i18next.getFixedT((await findUserById(playerId)).lang)
+    const t = i18n.getFixedT(playerId ? (await findUserById(playerId)).lang : "en")
 
     if (game.result) {
         throw Error(t("game is over"))
@@ -262,7 +262,7 @@ const getMyColor = (userId, game, t) => {
 
 const setOpponentNotification = async (userId, gameId) => {
     const game = await findGameById(gameId)
-    const t = i18next.getFixedT((await findUserById(userId)).lang)
+    const t = i18n.getFixedT(userId ? (await findUserById(userId)).lang : "en")
     if (!game.opponentNotified) {
         const myColor = getMyColor(userId, game, t)
         if (game.createdBy === myColor) {
@@ -279,7 +279,7 @@ const sendNotNotifiedCount = async userId => {
 }
 
 const surrender = async (userId, gameId) => {
-    const t = i18next.getFixedT((await findUserById(userId)).lang)
+    const t = i18n.getFixedT(userId ? (await findUserById(userId)).lang : "en")
     const game = await gameSrc.findGameById(gameId)
     const myColor = getMyColor(userId, game, t)
     if (game.result) {
@@ -296,7 +296,7 @@ const surrender = async (userId, gameId) => {
 }
 
 const offerDraw = async (userId, gameId) => {
-    const t = i18next.getFixedT((await findUserById(userId)).lang)
+    const t = i18n.getFixedT(userId ? (await findUserById(userId)).lang : "en")
     const game = await gameSrc.findGameById(gameId)
     const myColor = getMyColor(userId, game, t)
     if (game.movs.length < 2) {
@@ -312,7 +312,7 @@ const offerDraw = async (userId, gameId) => {
 }
 
 const acceptDraw = async (userId, gameId) => {
-    const t = i18next.getFixedT((await findUserById(userId)).lang)
+    const t = i18n.getFixedT(userId ? (await findUserById(userId)).lang : "en")
     const game = await gameSrc.findGameById(gameId)
     const myColor = getMyColor(userId, game, t)
     if (!game.drawOfferedBy) {
@@ -328,7 +328,7 @@ const acceptDraw = async (userId, gameId) => {
 }
 
 const rejectDraw = async (userId, gameId) => {
-    const t = i18next.getFixedT((await findUserById(userId)).lang)
+    const t = i18n.getFixedT(userId ? (await findUserById(userId)).lang : "en")
     const game = await gameSrc.findGameById(gameId)
     const myColor = getMyColor(userId, game, t)
     if (!game.drawOfferedBy) {
