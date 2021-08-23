@@ -15,7 +15,7 @@
  "you should write your username or email": "You should write your username or email",
  "you should write your password": "You should write your password",
  "you should write an email": "You should write an email",
- "'{{email}}' is no a valid email": "'{{email}}' is no a valid email",
+ "'{{email}}' is no a valid email": "'{{email}}' is not a valid email",
  "you should write a username": "You should write a username",
  "username should only contain numbers letters and hyphens": "Username should only contain numbers letters and hyphens",
  "password should contain at least one letter": "Password should contain at least one letter",
