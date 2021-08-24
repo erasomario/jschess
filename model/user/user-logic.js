@@ -239,7 +239,7 @@ const editEmail = async (id, password, newEmail) => {
     if (user.email === newEmail) {
         throw Error(t("email hasn't changed"))
     }
-    validateEmail(newEmail)
+    validateEmail(newEmail, t)
     const usrs = await userSrc.findUsersByAttr('email', newEmail)
     if (usrs.length > 0) {
         throw Error(t("there's already a user with that email"))
