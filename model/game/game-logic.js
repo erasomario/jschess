@@ -3,7 +3,7 @@ const gameSrc = require('./game-mongo')
 const { sendToGame, sendToUser } = require('../../utils/Sockets')
 const { validate } = require('../../utils/Validation')
 const makeGameDto = require('../game-dto/game-dto-model')
-const { getAllAttackedByMe, getBoard, getAttacked, includes, getCastling, isKingAttacked, checkEnoughMaterial } = require("../../utils/Chess")
+const { getAllAttackedByMe, getBoard, getAttacked, includes, getCastling, isKingAttacked, checkEnoughMaterial, getBoardHash } = require("../../utils/Chess")
 const { generateBotMove } = require('../bot/bot')
 const { findUserById } = require('../user/user-mongo')
 const i18n = require('i18next')
@@ -192,8 +192,23 @@ const createMove = async (game, playerId, src, dest, piece, prom) => {
     if (game.movs.length >= 2) {
         game.lastMovAt = new Date()
     }
+    
+    const hash = getBoardHash(newBoard)
+    game.movs[game.movs.length - 1].boardHash = hash
 
-    if (game.time) {
+    let reps = 0
+    game.movs.forEach((m, i) => {
+        if (i < game.movs.length - 2 && m.boardHash === hash) {
+            reps++
+        }
+    })
+    //it's 2 cos I need to find another to hashes like mine to make it 3    
+    if (reps === 2) {
+        game.result = "d"
+        game.endType = "threefold"
+    }
+
+    if (!game.result && game.time) {
         const times = getElapsedTimes(game)
         if (times.wSecs <= 0) {
             game.result = "b"

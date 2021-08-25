@@ -66,6 +66,27 @@ const checkEnoughMaterial = tiles => {
 }
 
 
+const getBoardHash = board => {
+    const m = {
+        wp: "1", wn: "2", wb: "3", wr: "4", wq: "5", wk: "6",
+        bp: "7", bn: "8", bb: "9", br: "0", bq: "A", bk: "B"
+    }
+    const squares = board.inGameTiles
+    const rta = [board.turn % 2 ? "w" : "b"]
+    for (let i = 0; i < squares.length; i++) {
+        const r = squares[i];
+        for (let j = 0; j < r.length; j++) {
+            rta.push(r[j] ? m[r[j].slice(0, 2)] : "_")
+        }
+    }
+    rta.push(board.touched.includes("br1") ? "1" : "0")
+    rta.push(board.touched.includes("br2") ? "1" : "0")
+    rta.push(board.touched.includes("bk1") ? "1" : "0")
+    rta.push(board.touched.includes("wr1") ? "1" : "0")
+    rta.push(board.touched.includes("wr2") ? "1" : "0")
+    rta.push(board.touched.includes("wk1") ? "1" : "0")
+    return rta.join("")
+}
 
 const getBoard = (movs, turn) => {
     const board = getStartBoard()
@@ -331,4 +352,5 @@ module.exports = {
     simulateMov,
     includes,
     checkEnoughMaterial,
+    getBoardHash
 }

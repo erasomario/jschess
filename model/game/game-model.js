@@ -11,6 +11,7 @@ const movSchema = Joi.object({
     prom: Joi.string(),
     label: Joi.string().required(),
     time: Joi.number(),
+    boardHash: Joi.string()
 })
 
 const gameSchema = Joi.object({
@@ -21,7 +22,7 @@ const gameSchema = Joi.object({
     createdAt: Joi.date().required().default(Date.now),
     lastMovAt: Joi.date(),
     result: Joi.string().valid('w', 'b', 'd'),
-    endType: Joi.string().valid('time','check', 'stale', 'material', 'agreed', 'surrender'),
+    endType: Joi.string().valid('time', 'check', 'stale', 'material', 'agreed', 'surrender', 'threefold'),
     movs: Joi.array().items(movSchema),
     time: Joi.number(),
     addition: Joi.number(),
