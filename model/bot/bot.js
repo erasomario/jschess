@@ -1,4 +1,4 @@
-const { getBoard, getAllAttackedByMe, simulateMov, getAllAttackedByEnemy, getAttacked } = require("../../utils/Chess")
+const { getBoard, getAllAttackedByMe, simulateMov, getAllAttackedByEnemy, getAttacked, getBoardHash, checkThreefold } = require("../../utils/Chess")
 
 const values = { p: 1, n: 3, b: 3.1, r: 5, q: 9, k: 4 }
 
@@ -6,10 +6,16 @@ const getPieceScore = piece => {
     return piece ? values[piece[1]] : 0
 }
 
-const getScore = (board, src, dest, myColor) => {
+const getScore = (game, board, src, dest, myColor) => {
     const piece = board.inGameTiles[src[1]][src[0]]
     const newTiles = simulateMov(board.inGameTiles, src[0], src[1], dest[0], dest[1])
     const destPiece = board.inGameTiles[dest[1]][dest[0]]
+
+    const hash = getBoardHash({ inGameTiles: newTiles, touched: [...board.touched, destPiece], turn: board.turn + 1 })
+
+    if (checkThreefold(game, hash)) {
+        return { score: Number.NEGATIVE_INFINITY, mind: "Discarded for threefold" }
+    }
 
     let mind = ""
     let score = 0
@@ -51,7 +57,7 @@ const generateBotMove = game => {
                 const att = getAttacked(tiles, touched, myColor, j, i)
                 if (att.length > 0) {
                     att.forEach(a => {
-                        const score = getScore(board, [j, i], a, myColor)
+                        const score = getScore(game, board, [j, i], a, myColor)
                         moves.push({ src: [j, i], dest: a, ...score })
                     })
                 }
@@ -62,7 +68,7 @@ const generateBotMove = game => {
         const cand = moves.filter(m => m.score === max)
         //TODO, try to choose the best move among the ones with the same score instead of random        
         //or at least try not to move important pieces randomly
-        const mov = cand[Math.floor(Math.random() * cand.length)]        
+        const mov = cand[Math.floor(Math.random() * cand.length)]
         const smoves = moves.sort((a, b) => b.score - a.score)
         if (process.env.LOG_BOT_LOGIC === "show") {
             console.log("Candidate movements _____________________________");

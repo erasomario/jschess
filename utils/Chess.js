@@ -132,6 +132,17 @@ const getBoard = (movs, turn) => {
     return { inGameTiles: board, whiteCaptured: sortCaptures(whiteCaptured), blackCaptured: sortCaptures(blackCaptured), touched, turn }
 }
 
+const checkThreefold = (game, hash) => {
+    let reps = 0
+    game.movs.forEach((m, i) => {
+        if (i < game.movs.length - 2 && m.boardHash === hash) {
+            reps++
+        }
+    })
+    //it's 2 cos I need to find another to hashes like mine to make it 3    
+    return reps === 2
+}
+
 const isMine = (myColor, piece) => {
     return (myColor === piece[0])
 }
@@ -343,6 +354,7 @@ const getAttacked = (board, touched, myColor, c, r, checkForKingAttacks = true) 
 }
 
 module.exports = {
+    getStartBoard,
     getBoard,
     getAttacked,
     getCastling,
@@ -352,5 +364,6 @@ module.exports = {
     simulateMov,
     includes,
     checkEnoughMaterial,
-    getBoardHash
+    getBoardHash,
+    checkThreefold
 }
