@@ -22,7 +22,11 @@ router.post("/", async function (req, res, next) {
 
 router.put("/", function (req, res, next) {
     findUserById(req?.user?.id).then(user => {
-        res.json(makeApiKey(user))
+        if (user) {
+            res.json(makeApiKey(user))
+        } else {
+            res.json({})
+        }
     }).catch(next)
 });
 
