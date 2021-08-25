@@ -7,15 +7,6 @@ const nodemailer = require('nodemailer')
 const i18n = require('i18next')
 const { getNext } = require('../sequence/sequence-logic')
 
-const addGuest = async lang => {
-    const usr = {}
-    usr.username = i18n.getFixedT(lang)("guest") + (await getNext("guest"))
-    usr.guest = true
-    usr.hasPicture = false
-    usr.lang = lang
-    return await userSrc.saveUser(usr)
-}
-
 const validateEmail = (email, t) => {
     if (!email) {
         throw Error(t("you should write an email"))
@@ -62,6 +53,16 @@ const validatePassword = (pass, t) => {
     }
 }
 
+const addGuest = async lang => {
+    const usr = {}
+    usr.username = i18n.getFixedT(lang)("guest") + (await getNext("guest"))
+    usr.guest = true
+    usr.hasPicture = false
+    usr.lang = lang
+    usr.createdAt = new Date()
+    return await userSrc.saveUser(usr)
+}
+
 const addUser = async (raw, guestId) => {
     const t = i18n.getFixedT(raw.lang)
     validateEmail(raw.email, t)
@@ -84,7 +85,7 @@ const addUser = async (raw, guestId) => {
         usr.password = hash(usr.password)
         return (await userSrc.editUser(usr))
     } else {
-        const usr = makeUser({ ...raw, guest: false })
+        const usr = makeUser({ ...raw, createdAt: new Date(), guest: false })
         usr.password = hash(usr.password)
         usr.hasPicture = false
         return (await userSrc.saveUser(usr))

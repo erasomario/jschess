@@ -11,10 +11,10 @@ const schema = Joi.object({
     email: Joi.string().label('email').email().trim().max(254),
     username: Joi.string().label('nombre de usuario').required().alphanum().trim().max(18).min(6),
     password: Joi.string().label('contraseña').max(72).min(6),
-    createdAt: Joi.date(),
+    createdAt: Joi.date().required(),
     hasPicture: Joi.boolean(),
     boardOpts: Joi.string(),
-    lang: Joi.string().valid("es", "en"),
+    lang: Joi.string().valid("es", "en").required(),
     guest: Joi.boolean().required(),
     recoveryKey: recoveryKey
 })
