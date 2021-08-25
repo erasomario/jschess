@@ -122,12 +122,10 @@ io.on('connection', (socket) => {
         disconnected(socket.handshake.query.id, socket)
     });
     socket.on('createMove', (req) => {
-        console.time("moveWhole")
         const userId = socket.handshake.query.id
         findGameById(req.gameId)
             .then(game => createMove(game, userId, req.src, req.dest, req.piece, req.prom))
             .catch(e => console.log(e.message))
-            .finally(() => console.timeEnd("moveWhole"))
     })
 })
 
