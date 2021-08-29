@@ -1,0 +1,1 @@
+module.exports = require ("./userInteractors")(require("../repo/index"))

@@ -1,8 +1,8 @@
 {
  "there's already a user with that name": "Ya existe un usuario con ese nombre",
  "there's already a user with that email": "Ya existe un usuario con ese mail",
- "wrong username or email": "Verifique su Nombre de usuario o email",
- "wrong password": "Verifique su Contraseña",
+ "wrong username or email": "Verifique su nombre de usuario o email",
+ "wrong password": "Verifique su contraseña",
  "mario's chess account recovery instructions": "Instrucciones de Recuperación de cuenta de Mario's Chess",
  "username": "Nombre de Usuario",
  "recovery key": "Clave de Recuperación",

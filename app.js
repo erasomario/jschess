@@ -1,17 +1,16 @@
+require('dotenv').config()
+require("./loaders/i18n")
+
 const express = require('express')
 const app = express()
 const http = require('http')
 const https = require('https')
 const path = require("path")
-const v1 = require("./api/v1.js")
-const v2 = require("./api/v2.js")
 const cors = require('cors')
-const { connected, disconnected } = require('./utils/Sockets')
+const { connected, disconnected } = require('./helpers/Sockets')
 const { middleware } = require('./middleware/authMiddleware.js')
 const fileUpload = require('express-fileupload')
 const fs = require('fs')
-require("./i18n")
-require('dotenv').config()
 
 if (!process.env.PROFILE_PICTURES_PATH) {
     throw Error("PROFILE_PICTURES_PATH should be defined")
@@ -42,7 +41,8 @@ if (process.env.SSL_CONF) {
 }
 
 const { Server } = require("socket.io")
-const { createMove, findGameById } = require('./model/game/game-logic.js')
+const { createMove, findGameById } = require('./application/game/interactor/gameInteractors.js')
+const {api} = require("./loaders/api")
 const io = new Server(server, { cors: {} })
 
 if (process.env.DB === "mongoose") {
@@ -67,7 +67,7 @@ if (process.env.DB === "mongoose") {
         console.log('Mongoose is working!')
     })
 } else if (process.env.DB === "mongo") {
-    require("./utils/Mongo")
+    require("./helpers/Mongo")
 } else {
     throw Error("DB env var should be defined")
 }
@@ -97,8 +97,7 @@ app.use((req, res, next) => {
 
 app.use(middleware)
 app.use(express.json())
-app.use("/api/v1", v1)
-app.use("/api/v2", v2)
+app.use("/api/v1", api)
 app.use(function (err, req, res, next) {
     if (!err) {
         console.log("Unexpected error");
@@ -130,4 +129,4 @@ io.on('connection', (socket) => {
 })
 
 const PORT = process.env.PORT || 4000;
-server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
+server.listen(parseInt( PORT), () => console.log(`Listening on port ${PORT}`));

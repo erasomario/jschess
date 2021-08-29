@@ -1,5 +1,5 @@
-const { decode } = require("../model/api-key/api-key-logic");
-const { findUserById } = require("../model/user/user-logic");
+const { decodeApiKey } = require("../application/apiKey/apiKeyInteractors")
+const { findUserById } = require("../application/user/interactors/index")
 
 const whiteList = [
     { path: new RegExp("^/api/v1/recovery_keys$"), method: "POST" },
@@ -9,26 +9,25 @@ const whiteList = [
     { path: new RegExp("^/api/v1/users/.+/password/recovery$"), method: "POST" },
 ]
 
-var middleware = (req, res, next) => {
+const middleware = (req, res, next) => {
     const path = req.path = req.path.replace(/\/$/, "");
     const allowed = whiteList.filter(white => {
-        return white.path.test(path) && white.method == req.method;
+        return white.path.test(path) && white.method == req.method
     }).length > 0;
     if (allowed) {
-        next();
+        next()
     } else {
         if (!req.headers['authorization']) {
-            res.status(401).end();
+            res.status(401).end()
         } else {
-            const sess = decode(req.headers['authorization'])
-            findUserById(sess.id).then(usr => {
+            findUserById(decodeApiKey(req.headers['authorization'])).then(usr => {
                 req.user = usr
                 next()
             }).catch(e => {
                 console.log(e)
                 res.status(500).end({ error: e.message })
             }
-            );
+            )
         }
     }
 }
