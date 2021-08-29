@@ -1,7 +1,7 @@
 const {hash, compare} = require('../../../helpers/Crypt')
 const {makeUser, validatePassword, validateEmail, validateUserName} = require('../userModel')
 const i18n = require('i18next')
-const {getNext} = require('../../sequence/sequenceInteractors')
+const {getNext} = require('../../sequence/interactor/index')
 
 const createUserInteractor = function (userRepo) {
 

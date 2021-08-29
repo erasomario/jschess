@@ -1,7 +1,7 @@
 const Joi = require('joi');
 const {validate} = require('../../../helpers/Validation');
 const {gameSchema} = require('../gameModel');
-const {findUserById} = require('../../user/interactors/userInteractors');
+const {findUserById} = require('../../user/interactors/index');
 
 const gameDtoSchema = gameSchema.append({
     whiteName: Joi.string(),

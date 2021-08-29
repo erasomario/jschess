@@ -15,7 +15,7 @@ const {
 const fs = require("fs")
 const sharp = require('sharp')
 const path = require("path")
-const {findNotNotifiedGamesCount, findGamesByStatus} = require("../../game/interactor/gameInteractors")
+const {findNotNotifiedGamesCount, findGamesByStatus} = require("../../game/interactor/index")
 const {makeUserListDto} = require("./userListDto")
 const {makeApiKey} = require("../../apiKey/apiKeyInteractors")
 const {makeUserDto} = require("./userDto")

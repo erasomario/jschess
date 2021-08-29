@@ -53,7 +53,7 @@ const findGamesByStatus = async (userId, status) => {
     return lst.map(mongoToPlain)
 }
 
-const findCurrentGames = async (userId) => {
+const findCurrentGames = async userId => {
     const lst = await getCollection("games")
         .find({
             whiteId: { $ne: userId },

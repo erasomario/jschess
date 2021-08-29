@@ -1,6 +1,6 @@
 const Joi = require('joi')
 const {validate} = require('../../../helpers/Validation')
-const {findUserById} = require('../../user/interactors/userInteractors')
+const {findUserById} = require('../../user/interactors/index')
 
 const gameListDtoSchema = Joi.object({
     id: Joi.string().required(),
