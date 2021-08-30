@@ -1,2 +1,4 @@
-console.error("building user interactor")
-module.exports = require ("./userInteractors")(require("../repo/index"))
+const repo = require("../repo/index")
+const sender = require("/helpers/SMTPMailSender")
+
+module.exports = require("./userInteractors")(repo, sender)

@@ -17,7 +17,7 @@ const sharp = require('sharp')
 const path = require("path")
 const {findNotNotifiedGamesCount, findGamesByStatus} = require("../../game/interactor/index")
 const {makeUserListDto} = require("./userListDto")
-const {makeApiKey} = require("../../apiKey/apiKeyInteractors")
+const {makeApiKey} = require("../../apiKey/interactor")
 const {makeUserDto} = require("./userDto")
 const {makeGameListDto} = require("../../game/api/gameListDto")
 

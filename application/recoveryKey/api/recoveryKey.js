@@ -1,5 +1,5 @@
 const express = require('express')
-const { createRecoveryPass } = require('../../user/interactors/userInteractors')
+const { createRecoveryPass } = require('../../user/interactors/index')
 const router = express.Router()
 
 router.post('/', (req, res, next) => {

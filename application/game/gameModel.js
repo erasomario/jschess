@@ -1,5 +1,5 @@
-const Joi = require('joi');
-const {validate} = require('../../helpers/Validation');
+const Joi = require('joi')
+const {validate} = require('../../helpers/Validation')
 
 const movSchema = Joi.object({
     id: Joi.string(),

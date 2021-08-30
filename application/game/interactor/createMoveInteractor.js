@@ -209,7 +209,7 @@ const makeCreateMoveInteractor = (gameRepo) => {
     }
 
     const timeout = async id => {
-        const game = await findGameById(id)
+        const game = await gameRepo.findGameById(id)
         if (!game.result && game.time) {
             const times = getElapsedTimes(game)
             if (times.wSecs <= 0) {
@@ -219,7 +219,7 @@ const makeCreateMoveInteractor = (gameRepo) => {
             }
             if (game.result) {
                 game.endType = "time"
-                await editGame(game)
+                await gameRepo.editGame(game)
                 await sendToGame(game, 'gameChanged')
             }
         }

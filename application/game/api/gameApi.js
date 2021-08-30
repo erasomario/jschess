@@ -15,11 +15,12 @@ const {
 } = require("../interactor/index")
 
 const {makeGameListDto} = require("./gameListDto")
+const {makeCreateGameDto} = require("./createGameRequestDto");
 
 const router = express.Router();
 
 router.post("/", function (req, res, next) {
-    createGame(req.user.id, req.body)
+    createGame(req.user.id, makeCreateGameDto(req.body))
         .then(makeGameDto)
         .then(game => res.json(game))
         .catch(next)

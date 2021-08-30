@@ -73,7 +73,7 @@ const generateBotMove = game => {
         if (process.env.LOG_BOT_LOGIC === "show") {
             console.log("Candidate movements _____________________________");
             smoves.forEach(m => console.log(m))
-            console.log("Choosen", mov)
+            console.log("Chosen", mov)
         }
         return { userId: myColor === "w" ? game.whiteId : game.blackId, ...mov }
     }

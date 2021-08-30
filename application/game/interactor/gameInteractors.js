@@ -1,18 +1,9 @@
-const Joi = require('joi')
 const {sendToGame, sendToUser} = require('../../../helpers/Sockets')
-const {validate} = require('../../../helpers/Validation')
 const {findUserById} = require('../../user/interactors/userInteractors')
 const i18n = require('i18next')
 
 const makeGameInteractor = gameRepo => {
-    const createGame = async (userId, raw) => {
-        const obj = validate(Joi.object({
-            opponentId: Joi.string(),
-            time: Joi.number().required(),
-            addition: Joi.number().required(),
-            color: Joi.string().required().valid('w', 'b', 'wb')
-        }), raw)
-
+    const createGame = async (userId, obj) => {
         const game = {
             createdAt: new Date(),
             time: obj.time,
@@ -46,7 +37,7 @@ const makeGameInteractor = gameRepo => {
 
         //letting know the other player that I'm inviting him to a game
         if (obj.opponentId) {
-            sendNotNotifiedCount(obj.opponentId)
+            await sendNotNotifiedCount(obj.opponentId)
         }
         return savedGame
     }

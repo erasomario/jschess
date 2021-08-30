@@ -1,6 +1,6 @@
 const express = require('express')
-const {login, addGuest} = require('../../user/interactors/userInteractors')
-const {makeApiKey} = require("../apiKeyInteractors");
+const {login, addGuest} = require('../../user/interactors/index')
+const {makeApiKey} = require("../interactor");
 const router = express.Router();
 
 router.post("/", async function (req, res, next) {

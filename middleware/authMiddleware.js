@@ -1,4 +1,4 @@
-const { decodeApiKey } = require("../application/apiKey/apiKeyInteractors")
+const { decodeApiKey } = require("../application/apiKey/interactor")
 const { findUserById } = require("../application/user/interactors/index")
 
 const whiteList = [

@@ -1,9 +1,15 @@
-const repo = require("../repo/sequenceMongo")
+const makeGetNextInteractor = repo => {
 
-const getNext = name => {
-    return repo.getNext(name)
+    const getNext = name => {
+        return repo.getNext(name)
+    }
+
+    return {
+        getNext
+    }
+
 }
 
-module.exports = {
-    getNext
-}
+module.exports = makeGetNextInteractor
+
+
