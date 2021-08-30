@@ -1,4 +1,4 @@
-const {makeGameDto} = require("../application/game/api/gameDto");
+const {makeGameDto} = require("../src/game/api/gameDto");
 const connections = new Map()
 
 const connected = (id, socket) => {

@@ -158,8 +158,8 @@ const createUserInteractor = function (userRepo, mailSender) {
             throw Error(t("wrong username or email"))
         }
         const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        const key = ([...Array(keyLength)]).reduce(t => t + letters[Math.random() * letters.length], '')
-        usr.recoveryKey = {key: key, createdAt: Date.now()}
+        const key = ([...Array(keyLength)]).reduce(t => t + letters[Math.floor(Math.random() * letters.length)], '')
+        usr.recoveryKey = {key: key, createdAt: new Date()}
         await userRepo.editUser(usr)
         const obscure = (str_1) => [...str_1].reduce((t_1, a, i, arr) => t_1 + (i >= parseInt(arr.length * 0.3) && i <= parseInt(arr.length * 0.6) ? '*' : a), '')
         let parts = usr.email.split('@')

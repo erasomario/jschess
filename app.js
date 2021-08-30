@@ -41,7 +41,7 @@ if (process.env.SSL_CONF) {
 }
 
 const { Server } = require("socket.io")
-const { createMove, findGameById } = require('./application/game/interactor/index')
+const { createMove, findGameById } = require('./src/game/interactor/index')
 const {api} = require("./loaders/api")
 const io = new Server(server, { cors: {} })
 

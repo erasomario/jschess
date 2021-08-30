@@ -1,5 +1,5 @@
-const { decodeApiKey } = require("../application/apiKey/interactor")
-const { findUserById } = require("../application/user/interactors/index")
+const { decodeApiKey } = require("../src/apiKey/interactor")
+const { findUserById } = require("../src/user/interactors/index")
 
 const whiteList = [
     { path: new RegExp("^/api/v1/recovery_keys$"), method: "POST" },
