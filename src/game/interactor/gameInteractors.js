@@ -1,8 +1,12 @@
 const {sendToGame, sendToUser} = require('../../../helpers/Sockets')
-const {findUserById} = require('../../user/interactors/userInteractors')
+const {findUserById} = require('../../user/interactors/index')
 const i18n = require('i18next')
+const makeCreateMoveInteractor = require("./createMoveInteractor");
 
 const makeGameInteractor = gameRepo => {
+
+    const {botMove} = makeCreateMoveInteractor(gameRepo)
+
     const createGame = async (userId, obj) => {
         const game = {
             createdAt: new Date(),

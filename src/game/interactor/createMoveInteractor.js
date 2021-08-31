@@ -225,7 +225,7 @@ const makeCreateMoveInteractor = (gameRepo) => {
         }
     }
 
-    return {createMove, timeout}
+    return {createMove, timeout, botMove}
 }
 
 module.exports = makeCreateMoveInteractor
