@@ -1,6 +1,6 @@
 const { getCollection, cleanNull } = require("../../../helpers/Mongo")
 const { ObjectId } = require("mongodb")
-const {makeUser} = require('../userModel')
+const { makeUser } = require('../userModel')
 const getUsers = () => getCollection("users")
 
 console.log("building user mongo repo")
@@ -24,7 +24,7 @@ const findUserById = async (id) => {
 
 const findUsersByAttr = async (attr, value) => {
     const query = {}
-    query[attr] = value
+    query[attr] = { $regex: value, $options: 'i' }
     return (await getUsers().find(query).toArray()).map(u => mongoToPlain(u))
 }
 
