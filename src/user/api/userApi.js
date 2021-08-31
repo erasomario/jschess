@@ -29,7 +29,7 @@ router.post("/", function (req, res, next) {
         .catch(next)
 })
 
-router.get("/", (req, res, next) => {
+router.get("/", (req, res) => {
     res.json(makeUserDto(req.user))
 })
 
